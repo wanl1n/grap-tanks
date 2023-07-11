@@ -115,7 +115,7 @@ int main(void)
     float width = 600.0f;
 
     // Creates window and ends program if it fails.
-    window = glfwCreateWindow(height, width, "Elden’s Hill", NULL, NULL);
+    window = glfwCreateWindow(height, width, "Salamat", NULL, NULL);
     if (!window) {
         glfwTerminate();
         return -1;
