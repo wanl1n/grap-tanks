@@ -1,0 +1,8 @@
+﻿  main.cpp
+C:\Users\zacha\Coding\Programs\GDGRAP1\PC01-Que_Zachary\Src\main.cpp(463,64): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+  Generating code
+  1 of 2046 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    28 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  PCO1-Que_Zachary.vcxproj -> C:\Users\zacha\Coding\Programs\GDGRAP1\PC01-Que_Zachary\Src\x64\Release\PCO1-Que_Zachary.exe

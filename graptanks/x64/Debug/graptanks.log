@@ -1,0 +1,6 @@
+﻿D:\Program Files\Visual Studio Community 2022\IDE\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(531,5): warning MSB8028: The intermediate directory (x64\Debug\) contains files shared from another project (PCO1-Que_Zachary.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  glad.c
+  main.cpp
+C:\Users\tiger\Documents\Acads\y2\t3\gdgrap1\gdgrap1\tanks mp\graptanks\main.cpp(463,46): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  graptanks.vcxproj -> C:\Users\tiger\Documents\Acads\y2\t3\gdgrap1\gdgrap1\tanks mp\graptanks\x64\Debug\graptanks.exe

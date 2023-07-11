@@ -1,0 +1,4 @@
+﻿  main.cpp
+C:\Users\zacha\Coding\Programs\GDGRAP1\PC01-Que_Zachary\Src\main.cpp(462,64): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  PCO1-Que_Zachary.vcxproj -> C:\Users\zacha\Coding\Programs\GDGRAP1\PC01-Que_Zachary\Src\x64\Debug\PCO1-Que_Zachary.exe
