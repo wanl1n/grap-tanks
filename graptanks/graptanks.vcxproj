@@ -140,8 +140,6 @@
     <ClInclude Include="tiny_obj_loader.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\PCO1-Que-Zachary.vert" />
-    <None Include="Shaders\PCO1-Que-Zachary.frag" />
     <None Include="Shaders\sample.frag" />
     <None Include="Shaders\sample.vert" />
   </ItemGroup>
