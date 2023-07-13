@@ -4,6 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "cmath"
+//#include "Player.cpp"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
@@ -208,7 +209,7 @@ int main(void)
 
     // Load the 3D model obj file.
     // "Puss in banana suit 3D model" (https://skfb.ly/oF7Ay) by Wnight is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
-    std::string path = "3D/tank+00a.obj";
+    std::string path = "3D/M1A1.obj";
     std::vector<tinyobj::shape_t> shape;
     std::vector<tinyobj::material_t> material;
     std::string warning, error;
@@ -355,6 +356,35 @@ int main(void)
         unsigned int projLoc = glGetUniformLocation(shaderProgram, "projection");
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
+        glm::vec3 lightPos = cameraCenter;
+        glm::vec3 lightColor = glm::vec3(0, 1, 0);
+
+        float ambientStr = 0.5f;
+        glm::vec3 ambientColor = lightColor;
+
+        float specStr = 0.5f;
+        float specPhong = 16;
+
+        //Lighting
+        GLuint lightAddress = glGetUniformLocation(shaderProgram, "lightPos");
+        glUniform3fv(lightAddress, 1, glm::value_ptr(lightPos));
+        GLuint lightColorAddress = glGetUniformLocation(shaderProgram, "lightColor");
+        glUniform3fv(lightColorAddress, 1, glm::value_ptr(lightColor));
+
+        //Ambient
+        GLuint ambientStrAddress = glGetUniformLocation(shaderProgram, "ambientStr");
+        glUniform1f(ambientStrAddress, ambientStr);
+        GLuint ambientColorAddress = glGetUniformLocation(shaderProgram, "ambientColor");
+        glUniform3fv(ambientColorAddress, 1, glm::value_ptr(ambientColor));
+
+        //Specular
+        GLuint cameraPosAddress = glGetUniformLocation(shaderProgram, "cameraPos");
+        glUniform3fv(cameraPosAddress, 1, glm::value_ptr(cameraPos));
+        GLuint specStrAddress = glGetUniformLocation(shaderProgram, "specStr");
+        glUniform1f(specStrAddress, specStr);
+        GLuint specPhongAddress = glGetUniformLocation(shaderProgram, "specPhong");
+        glUniform1f(specPhongAddress, specPhong);
+
         // If the spacebar was clicked,
         if (isSpawning) {
 
@@ -379,6 +409,7 @@ int main(void)
         for (Model3D* model : models) {
             model->draw(&shaderProgram, fullVertexData);
         }
+
 
         glfwSwapBuffers(window);
         glfwPollEvents();

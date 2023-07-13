@@ -20,6 +20,9 @@ uniform mat4 view;
 // We'll assign the Projection matrix here.
 uniform mat4 projection;
 
+layout(location = 1) in vec3 vertexNormal;
+out vec3 normCoord;
+out vec3 fragPos;
 
 void main() {
 	// Multiply the transformation matrix to the vec4 version of aPos to get the final position.
@@ -27,4 +30,7 @@ void main() {
 
 	//Assigns the UV
 	texCoord = aTex;
+
+	normCoord = mat3(transpose(inverse(transform))) * vertexNormal;
+	fragPos = vec3(transform * vec4(aPos, 1.0));
 }
