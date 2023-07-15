@@ -41,8 +41,8 @@ void main() {
 	float spec = pow(max(dot(reflectDir, viewDir), 0.1), specPhong);
 	vec3 specColor = spec * specStr * lightColor;
 
-	//FragColor = vec4(diffuse + ambientCol + specColor,1.0) * texture(tex0, texCoord);
-	FragColor = vec4(diffuse + ambientCol + specColor,1.0) * vec4(0.5f, 0.5f, 0.0f, 1.0f);
+	FragColor = vec4(diffuse + ambientCol + specColor,1.0) * texture(tex0, texCoord);
+	//FragColor = vec4(diffuse + ambientCol + specColor,1.0) * vec4(0.5f, 0.5f, 0.0f, 1.0f);
 
 
 

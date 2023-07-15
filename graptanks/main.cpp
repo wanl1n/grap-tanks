@@ -31,7 +31,7 @@ bool isMovingForward = false;
 bool isMovingBack = false;
 
 // Spawn flag. Updated by input.
-bool isSpawning = false;
+bool nightVision = false;
 
 // Create a 3D Model Object.
 class Model3D {
@@ -100,8 +100,13 @@ void Key_Callback(GLFWwindow* window, int key, int scancode, int action, int mod
         isMovingBack = false;
 
     // If pressed Spacebar, trigger a spawn.
-    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
-        isSpawning = true;
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+        if (nightVision)
+            nightVision = false;
+        else
+            nightVision = true;
+    }
+        
 }
 
 int main(void)
@@ -131,7 +136,7 @@ int main(void)
     // Flip the texture (because it's flipped by default).
     stbi_set_flip_vertically_on_load(true);
     // "Puss in banana suit 3D model" (https://skfb.ly/oF7Ay) by Wnight is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
-    unsigned char* text_bytes = stbi_load("3D/BananaCat_vertexcolor.png", // Texture path
+    unsigned char* text_bytes = stbi_load("3D/plastictexture.jpg", // Texture path
         &img_width, // Width of the texture
         &img_height, // height of the texture
         &color_channels, // color channel
@@ -153,11 +158,11 @@ int main(void)
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
-        GL_RGBA,
+        GL_RGB,
         img_width,
         img_height,
         0,
-        GL_RGBA,
+        GL_RGB,
         GL_UNSIGNED_BYTE,
         text_bytes
     );
@@ -206,6 +211,118 @@ int main(void)
 
     // Link the shader program to the program.
     glLinkProgram(shaderProgram);
+
+    //skybox
+
+    std::fstream sky_vertSrc("Shaders/skybox.vert");
+    std::stringstream sky_vertBuff;
+    sky_vertBuff << sky_vertSrc.rdbuf();
+    std::string sky_vertS = sky_vertBuff.str();
+    const char* sky_v = sky_vertS.c_str();
+
+    std::fstream sky_fragSrc("Shaders/skybox.frag");
+    std::stringstream sky_fragBuff;
+    sky_fragBuff << sky_fragSrc.rdbuf();
+    std::string sky_fragS = sky_fragBuff.str();
+    const char* sky_f = sky_fragS.c_str();
+
+    GLuint sky_vertShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(sky_vertShader, 1, &sky_v, NULL);
+    glCompileShader(sky_vertShader);
+
+    GLuint sky_fragShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(sky_fragShader, 1, &sky_f, NULL);
+    glCompileShader(sky_fragShader);
+
+    GLuint sky_shaderProgram = glCreateProgram();
+    glAttachShader(sky_shaderProgram, sky_vertShader);
+    glAttachShader(sky_shaderProgram, sky_fragShader);
+
+    glLinkProgram(sky_shaderProgram);
+
+//Vertices for the cube
+    float skyboxVertices[]{
+        -1.f, -1.f, 1.f, //0
+        1.f, -1.f, 1.f,  //1
+        1.f, -1.f, -1.f, //2
+        -1.f, -1.f, -1.f,//3
+        -1.f, 1.f, 1.f,  //4
+        1.f, 1.f, 1.f,   //5
+        1.f, 1.f, -1.f,  //6
+        -1.f, 1.f, -1.f  //7
+    };
+
+    //Skybox Indices
+    unsigned int skyboxIndices[]{
+        1,2,6,
+        6,5,1,
+
+        0,4,7,
+        7,3,0,
+
+        4,5,6,
+        6,7,4,
+
+        0,3,2,
+        2,1,0,
+
+        0,1,5,
+        5,4,0,
+
+        3,7,6,
+        6,2,3
+    };
+
+    unsigned int skyboxVAO, skyboxVBO, skyboxEBO;
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glGenBuffers(1, &skyboxEBO);
+
+    glBindVertexArray(skyboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT), (void*)0);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, skyboxEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(skyboxIndices), &skyboxIndices, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+
+    std::string facesSkybox[]{
+
+        "Skybox/rainbow_rt.png", //right
+        "Skybox/rainbow_lf.png", //left
+        "Skybox/rainbow_up.png", //top
+        "Skybox/rainbow_dn.png", //bottom
+        "Skybox/rainbow_ft.png", //front
+        "Skybox/rainbow_bk.png"  //back
+    };
+
+    unsigned int skyboxTex;
+    glGenTextures(1, &skyboxTex);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTex);
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    for (unsigned int i = 0; i < 6; i++) {
+        int w, h, skyCChannel;
+        stbi_set_flip_vertically_on_load(false);
+
+        unsigned char* data = stbi_load(facesSkybox[i].c_str(), &w, &h, &skyCChannel, 0);
+
+        if (data) {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        }
+
+        stbi_image_free(data);
+    }
+
+    stbi_set_flip_vertically_on_load(true);
 
     // Load the 3D model obj file.
     // "Puss in banana suit 3D model" (https://skfb.ly/oF7Ay) by Wnight is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
@@ -348,6 +465,41 @@ int main(void)
             cameraPos + cameraCenter, // to make sure cameracenter is always infront of camera pos.
             worldUp);
 
+        glm::vec3 lightColor; 
+
+        // temporary switch between nightvision
+        if (nightVision) {
+            lightColor = glm::vec3(0, 1, 0);
+        } else {
+            lightColor = glm::vec3(1, 1, 1);
+
+            //Skybox Render if nightvision is off
+            glDepthMask(GL_FALSE);
+            glDepthFunc(GL_LEQUAL);
+
+            glUseProgram(sky_shaderProgram);
+
+            glm::mat4 skyView = glm::mat4(1.f);
+            skyView = glm::mat4(glm::mat3(viewMatrix));
+
+            unsigned int sky_ProjectionLoc = glGetUniformLocation(sky_shaderProgram, "projection");
+            glUniformMatrix4fv(sky_ProjectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
+            unsigned int sky_ViewLoc = glGetUniformLocation(sky_shaderProgram, "view");
+            glUniformMatrix4fv(sky_ViewLoc, 1, GL_FALSE, glm::value_ptr(skyView));
+
+            glBindVertexArray(skyboxVAO);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTex);
+
+            glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+            glDepthMask(GL_TRUE);
+            glDepthFunc(GL_LESS);
+
+            glUseProgram(shaderProgram);
+        }
+
         // Updating the view Matrix in the shader program.
         unsigned int viewLoc = glGetUniformLocation(shaderProgram, "view");
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMatrix));
@@ -357,7 +509,10 @@ int main(void)
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
         glm::vec3 lightPos = cameraCenter;
-        glm::vec3 lightColor = glm::vec3(0, 1, 0);
+        
+
+        
+        
 
         float ambientStr = 0.5f;
         glm::vec3 ambientColor = lightColor;
@@ -385,18 +540,6 @@ int main(void)
         GLuint specPhongAddress = glGetUniformLocation(shaderProgram, "specPhong");
         glUniform1f(specPhongAddress, specPhong);
 
-        // If the spacebar was clicked,
-        if (isSpawning) {
-
-            // First check if 3 seconds have passed since the last spawn.
-            if (glfwGetTime() > 3) {
-                glfwSetTime(0); // Reset the timer.
-                // Add a new model to be rendered at the point the camera is currently looking at.
-                models.push_back(new Model3D(cameraPos + cameraCenter));
-            }
-
-            isSpawning = false; // Reset the flag.
-        }
 
         /* * * * * * * * * * ADDING THE TEXTURE TO THE SHADERS * * * * * * * * * */
         GLuint tex0Address = glGetUniformLocation(shaderProgram, "tex0");
