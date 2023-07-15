@@ -4,7 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "cmath"
-//#include "Player.cpp"
+#include "Player.hpp"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
@@ -14,6 +14,8 @@
 
 #include <string>
 #include <iostream>
+
+using namespace models;
 
 float speed = 0.001f; // Movement speed of the camera.
 float radius = 30.f; // Distance of the spawned object to the camera.=
@@ -325,7 +327,6 @@ int main(void)
     stbi_set_flip_vertically_on_load(true);
 
     // Load the 3D model obj file.
-    // "Puss in banana suit 3D model" (https://skfb.ly/oF7Ay) by Wnight is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
     std::string path = "3D/M1A1.obj";
     std::vector<tinyobj::shape_t> shape;
     std::vector<tinyobj::material_t> material;
