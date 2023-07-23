@@ -65,8 +65,8 @@ int main() {
         return -1;
 
     // Height and width of the window.
-    float height = 600.0f;
-    float width = 600.0f;
+    float height = 1280.0f;
+    float width = 720.0f;
 
     // Creates window and ends program if it fails.
     window = glfwCreateWindow(height, width, "Salamat", NULL, NULL);
@@ -428,14 +428,26 @@ int main() {
             cameraPos + cameraCenter, // to make sure cameracenter is always infront of camera pos.
             worldUp);
 
-        glm::vec3 lightColor;
+        glm::vec3 lightColor = glm::vec3(1, 1, 1);
+        glm::vec3 lightPos;
+        float ambientStr = 0.1f;
+        glm::vec3 ambientColor = lightColor;
+
+        float specStr = 0.5f;
+        float specPhong = 16;
 
         // temporary switch between nightvision
         if (nightVision) {
+            lightPos = cameraCenter;
             lightColor = glm::vec3(0, 1, 0);
+            ambientStr = 0.5f;
+            ambientColor = lightColor;
         }
         else {
             lightColor = glm::vec3(1, 1, 1);
+            lightPos = glm::vec3(0, 20, 0);
+            ambientStr = 0.2f;
+            ambientColor = lightColor;
 
             //Skybox Render if nightvision is off
             glDepthMask(GL_FALSE);
@@ -472,18 +484,6 @@ int main() {
         unsigned int projLoc = glGetUniformLocation(shaderProgram, "projection");
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
-        glm::vec3 lightPos = cameraCenter;
-
-
-
-
-
-        float ambientStr = 0.5f;
-        glm::vec3 ambientColor = lightColor;
-
-        float specStr = 0.5f;
-        float specPhong = 16;
-
         //Lighting
         GLuint lightAddress = glGetUniformLocation(shaderProgram, "lightPos");
         glUniform3fv(lightAddress, 1, glm::value_ptr(lightPos));
@@ -518,9 +518,8 @@ int main() {
         //}
         tankPos = (cameraPos + cameraCenter * 1.5f);
         tankPos.y = -30.0f;
-        tankRot += 1.0f;
         
-        CPlayer.updateRotation(yaw);
+        CPlayer.updateRotation((mousePos.x / (width / 2)) * theta_tot);
         CPlayer.updatePosition(tankPos);
         
         CGround.draw(&shaderProgram);
