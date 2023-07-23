@@ -1,12 +1,12 @@
-#ifndef MODELS_PLAYER_H
-#define MODELS_PLAYER_H
+#ifndef MODELS_GROUND_H
+#define MODELS_GROUND_H
 
 #include "main.hpp"
 
 #include "vector"
 
 namespace models {
-	class Player {
+    class Ground {
     private:
         glm::vec3 pos; // position of spawned model.
         glm::vec3 rotation; // axis of rotation
@@ -21,15 +21,16 @@ namespace models {
         // Constructor and draw Function.
     public:
         // Initialize all attributes of an instance.
-        Player(glm::vec3 pos);
+        Ground();
 
     public:
         // Draws the object.
         void initialize();
         void draw(GLuint* shaderProgram);
+
+
         void updatePosition(glm::vec3 pos);
-        void updateRotation(float rotation);
-	};
+    };
 }
 
 #endif

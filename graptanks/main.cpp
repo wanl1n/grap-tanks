@@ -1,19 +1,8 @@
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include "cmath"
-#include "Player.hpp"
-
-#define TINYOBJLOADER_IMPLEMENTATION
-#include "tiny_obj_loader.h"
-
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
-#include <string>
-#include <iostream>
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "main.hpp"
+#include "Player.hpp"
+#include "Ground.hpp"
 
 using namespace models;
 
@@ -24,7 +13,7 @@ float theta_tot = -90.f; // Max angle on the left or bottom side of the screen.
 // Initial Position of the Camera
 float x_mod = 0;
 float y_mod = 0;
-float z_mod = -50.f;
+float z_mod = -10.f;
 
 // Movement flags. Updated by input.
 bool isMovingLeft = false;
@@ -34,50 +23,8 @@ bool isMovingBack = false;
 
 // Spawn flag. Updated by input.
 bool nightVision = false;
-
-// Create a 3D Model Object.
-class Model3D {
-
-    // Worldly attributes of the 3D model (transformations and indices)
-private:
-    glm::vec3 pos; // position of spawned model.
-    glm::vec3 rotation; // axis of rotation
-    float theta; // in degrees
-    glm::vec3 scale; // scale of the spawned model.
-
-    // Constructor and draw Function.
-public:
-    // Initialize all attributes of an instance.
-    Model3D(glm::vec3 pos) {
-        this->pos = pos; // Take parameter as position.
-
-        // Since model is initially flipped (facing backwards), flip the model.
-        this->rotation = glm::vec3(0, 1, 0); // Set axis of rotation to y-axis.
-        this->theta = 180.f; // Rotate around y-axis by 180 degrees to flip the model.
-
-        // Since model is too big, scale it down to 0.1f.
-        this->scale = glm::vec3(0.1f, 0.1f, 0.1f);
-    }
-
-    // Draws the object.
-    void draw(GLuint* shaderProgram, std::vector<GLfloat> fullVertexData) {
-        // Create the transformation matrix and apply the transformation attributes at draw.
-        glm::mat4 transformation_matrix = glm::translate(glm::mat4(1.0f), this->pos);
-        transformation_matrix = glm::scale(transformation_matrix, this->scale);
-        transformation_matrix = glm::rotate(transformation_matrix,
-            glm::radians(this->theta),
-            this->rotation);
-
-        // Update the shader with the new transform of the object.
-        unsigned int transformLoc = glGetUniformLocation(*shaderProgram, "transform");
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transformation_matrix));
-
-        // Get the shaderprogram to be used.
-        glUseProgram(*shaderProgram);
-        // Draw the object (XYZUV in arrays) with texture.
-        glDrawArrays(GL_TRIANGLES, 0, fullVertexData.size() / 5);
-    }
-};
+glm::vec3 tankPos;
+float tankRot;
 
 // Process keyboard inputs.
 void Key_Callback(GLFWwindow* window, int key, int scancode, int action, int mod) {
@@ -111,8 +58,7 @@ void Key_Callback(GLFWwindow* window, int key, int scancode, int action, int mod
         
 }
 
-int main(void)
-{
+int main() {
     GLFWwindow* window;
 
     if (!glfwInit())
@@ -132,50 +78,54 @@ int main(void)
     glfwMakeContextCurrent(window);
     gladLoadGL();
 
-    // Width, height, and color channels of a texture.
-    int img_width, img_height, color_channels; // Width, Height, and color channels of the Texture.
+    Player CPlayer(glm::vec3(0,0,0));
+    Ground CGround = Ground();
 
-    // Flip the texture (because it's flipped by default).
-    stbi_set_flip_vertically_on_load(true);
-    // "Puss in banana suit 3D model" (https://skfb.ly/oF7Ay) by Wnight is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
-    unsigned char* text_bytes = stbi_load("3D/plastictexture.jpg", // Texture path
-        &img_width, // Width of the texture
-        &img_height, // height of the texture
-        &color_channels, // color channel
-        0);
-    // Create a texture.
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    // If the texture is too small, just clamp it to the edge.
-    glTexParameteri(GL_TEXTURE_2D,
-        GL_TEXTURE_WRAP_S,
-        GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D,
-        GL_TEXTURE_WRAP_T,
-        GL_CLAMP_TO_EDGE);
 
-    // Set the texture attributes using the width, height, and texture bytes taken from the loaded texture.
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        GL_RGB,
-        img_width,
-        img_height,
-        0,
-        GL_RGB,
-        GL_UNSIGNED_BYTE,
-        text_bytes
-    );
+    //// Width, height, and color channels of a texture.
+    //int img_width, img_height, color_channels; // Width, Height, and color channels of the Texture.
 
-    // Generate mipmaps/ smaller versions of the texture for faster rendering at further distances.
-    glGenerateMipmap(GL_TEXTURE_2D);
-    // Free the memmory.
-    stbi_image_free(text_bytes);
+    //// Flip the texture (because it's flipped by default).
+    //stbi_set_flip_vertically_on_load(true);
+    //// "Puss in banana suit 3D model" (https://skfb.ly/oF7Ay) by Wnight is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+    //unsigned char* text_bytes = stbi_load("3D/plastictexture.jpg", // Texture path
+    //    &img_width, // Width of the texture
+    //    &img_height, // height of the texture
+    //    &color_channels, // color channel
+    //    0);
+    //// Create a texture.
+    //GLuint texture;
+    //glGenTextures(1, &texture);
+    //glActiveTexture(GL_TEXTURE0);
+    //glBindTexture(GL_TEXTURE_2D, texture);
+    //// If the texture is too small, just clamp it to the edge.
+    //glTexParameteri(GL_TEXTURE_2D,
+    //    GL_TEXTURE_WRAP_S,
+    //    GL_CLAMP_TO_EDGE);
+    //glTexParameteri(GL_TEXTURE_2D,
+    //    GL_TEXTURE_WRAP_T,
+    //    GL_CLAMP_TO_EDGE);
 
-    // Enable depth test to make sure the model has depth.
-    glEnable(GL_DEPTH_TEST);
+    //// Set the texture attributes using the width, height, and texture bytes taken from the loaded texture.
+    //glTexImage2D(
+    //    GL_TEXTURE_2D,
+    //    0,
+    //    GL_RGB,
+    //    img_width,
+    //    img_height,
+    //    0,
+    //    GL_RGB,
+    //    GL_UNSIGNED_BYTE,
+    //    text_bytes
+    //);
+
+    //// Generate mipmaps/ smaller versions of the texture for faster rendering at further distances.
+    //glGenerateMipmap(GL_TEXTURE_2D);
+    //// Free the memmory.
+    //stbi_image_free(text_bytes);
+
+    //// Enable depth test to make sure the model has depth.
+    //glEnable(GL_DEPTH_TEST);
 
     // Check for inputs of the user.
     glfwSetKeyCallback(window, Key_Callback);
@@ -242,7 +192,7 @@ int main(void)
 
     glLinkProgram(sky_shaderProgram);
 
-//Vertices for the cube
+    //Vertices for the cube
     float skyboxVertices[]{
         -1.f, -1.f, 1.f, //0
         1.f, -1.f, 1.f,  //1
@@ -326,90 +276,90 @@ int main(void)
 
     stbi_set_flip_vertically_on_load(true);
 
-    // Load the 3D model obj file.
-    std::string path = "3D/M1A1.obj";
-    std::vector<tinyobj::shape_t> shape;
-    std::vector<tinyobj::material_t> material;
-    std::string warning, error;
-    tinyobj::attrib_t attributes;
+    //// Load the 3D model obj file.
+    //std::string path = "3D/M1A1.obj";
+    //std::vector<tinyobj::shape_t> shape;
+    //std::vector<tinyobj::material_t> material;
+    //std::string warning, error;
+    //tinyobj::attrib_t attributes;
 
-    // Set its attributes from the obj file.
-    bool success = tinyobj::LoadObj(
-        &attributes,
-        &shape,
-        &material,
-        &warning,
-        &error,
-        path.c_str()
-    );
+    //// Set its attributes from the obj file.
+    //bool success = tinyobj::LoadObj(
+    //    &attributes,
+    //    &shape,
+    //    &material,
+    //    &warning,
+    //    &error,
+    //    path.c_str()
+    //);
 
-    // Loading the Position and UV data of the object.
-    std::vector<GLfloat> fullVertexData;
-    for (int i = 0; i < shape[0].mesh.indices.size(); i++) {
-        tinyobj::index_t vData = shape[0].mesh.indices[i];
-        fullVertexData.push_back(attributes.vertices[vData.vertex_index * 3]);
-        fullVertexData.push_back(attributes.vertices[vData.vertex_index * 3 + 1]);
-        fullVertexData.push_back(attributes.vertices[vData.vertex_index * 3 + 2]);
-        fullVertexData.push_back(attributes.texcoords[vData.texcoord_index * 2]);
-        fullVertexData.push_back(attributes.texcoords[vData.texcoord_index * 2 + 1]);
+    //// Loading the Position and UV data of the object.
+    //std::vector<GLfloat> fullVertexData;
+    //for (int i = 0; i < shape[0].mesh.indices.size(); i++) {
+    //    tinyobj::index_t vData = shape[0].mesh.indices[i];
+    //    fullVertexData.push_back(attributes.vertices[vData.vertex_index * 3]);
+    //    fullVertexData.push_back(attributes.vertices[vData.vertex_index * 3 + 1]);
+    //    fullVertexData.push_back(attributes.vertices[vData.vertex_index * 3 + 2]);
+    //    fullVertexData.push_back(attributes.texcoords[vData.texcoord_index * 2]);
+    //    fullVertexData.push_back(attributes.texcoords[vData.texcoord_index * 2 + 1]);
 
-    }
+    //}
 
-    // Generating buffers.
-    GLuint VAO, VBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+    //// Generating buffers.
+    //GLuint VAO, VBO;
+    //glGenVertexArrays(1, &VAO);
+    //glGenBuffers(1, &VBO);
 
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // Insert the model vertices (including UV) into the VBO for rendering).
-    glBufferData(
-        GL_ARRAY_BUFFER,
-        sizeof(GLfloat) * fullVertexData.size(),
-        fullVertexData.data(),
-        GL_STATIC_DRAW
-    );
-    // Tell it how to interpret the aboce data.
-    glVertexAttribPointer(
-        0,
-        3,
-        GL_FLOAT,
-        GL_FALSE,
-        5 * sizeof(GL_FLOAT),
-        (void*)0
-    );
+    //glBindVertexArray(VAO);
+    //glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    //// Insert the model vertices (including UV) into the VBO for rendering).
+    //glBufferData(
+    //    GL_ARRAY_BUFFER,
+    //    sizeof(GLfloat) * fullVertexData.size(),
+    //    fullVertexData.data(),
+    //    GL_STATIC_DRAW
+    //);
+    //// Tell it how to interpret the aboce data.
+    //glVertexAttribPointer(
+    //    0,
+    //    3,
+    //    GL_FLOAT,
+    //    GL_FALSE,
+    //    5 * sizeof(GL_FLOAT),
+    //    (void*)0
+    //);
 
-    // Create a UV pointer (3 because its at index 3).
-    GLintptr uvPtr = 3 * sizeof(float);
-    glVertexAttribPointer(
-        2,
-        2,
-        GL_FLOAT,
-        GL_FALSE,
-        5 * sizeof(GLfloat),
-        (void*)uvPtr
-    );
+    //// Create a UV pointer (3 because its at index 3).
+    //GLintptr uvPtr = 3 * sizeof(float);
+    //glVertexAttribPointer(
+    //    2,
+    //    2,
+    //    GL_FLOAT,
+    //    GL_FALSE,
+    //    5 * sizeof(GLfloat),
+    //    (void*)uvPtr
+    //);
 
-    glEnableVertexAttribArray(0);
+    //glEnableVertexAttribArray(0);
 
-    glEnableVertexAttribArray(2);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    //glEnableVertexAttribArray(2);
+    //glBindBuffer(GL_ARRAY_BUFFER, 0);
+    //glBindVertexArray(0);
 
     // Set the projection view to perspective view.
     glm::mat4 projection = glm::perspective(
         glm::radians(60.f),
         height / width,
         0.1f,
-        100.f
+        200.f
     );
 
     // Stores the mouse cursor positions.
     double x_cursor_pos, y_cursor_pos;
     // Stores all the models currently in the world.
-    std::vector<Model3D*> models;
+    //std::vector<Player*> players;
     // Spawn 1 model in at the start of the program.
-    models.push_back(new Model3D(glm::vec3(0, 0, 0)));
+    //players.push_back(new Model3D(glm::vec3(0, 0, 0)));
     glfwSetTime(0); // Start the timer.
 
     // Initialize the camera position.
@@ -449,29 +399,42 @@ int main(void)
 
         // Update the camera center with the new calculated point.
         // Finally, make sure to add the strafing movement of the camera to the x-axis.
-        glm::vec3 cameraCenter = glm::vec3(xAxisRot, yAxisRot, zAxisRot);
+        glm::vec3 cameraCenter = glm::vec3(xAxisRot, yAxisRot , zAxisRot);
+        cameraCenter.y = -5;
 
         // Next, calculate the position change based on where the camera center is.
         glm::vec3 worldUp = glm::normalize(glm::vec3(0, 1.f, 0));
 
         // If moving sideways, add or subtract the normalized right vector of the camera to move the camera position sideways.
-        if (isMovingLeft) cameraPos -= glm::normalize(glm::cross(cameraCenter, worldUp)) * 0.5f;
-        if (isMovingRight) cameraPos += glm::normalize(glm::cross(cameraCenter, worldUp)) * 0.5f;
+        if (isMovingLeft) {
+            cameraPos -= glm::normalize(glm::cross(cameraCenter, worldUp)) * 0.001f;
+        }
+        if (isMovingRight) {
+            cameraPos += glm::normalize(glm::cross(cameraCenter, worldUp)) * 0.001f;
+        }
         // If moving forward or back, go towards or away from the camera center.
-        if (isMovingForward) cameraPos += speed * (cameraCenter);
-        if (isMovingBack) cameraPos -= speed * (cameraCenter);
+        if (isMovingForward) {
+            cameraPos += 0.0001f * (cameraCenter);
+        }
+        if (isMovingBack) {
+            cameraPos -= 0.00001f * (cameraCenter);
+        }
+        
+        //Makes sure that camera can only move in the z and x axis
+        cameraPos.y = -15;
 
         // Create the view matrix.
         glm::mat4 viewMatrix = glm::lookAt(cameraPos,
             cameraPos + cameraCenter, // to make sure cameracenter is always infront of camera pos.
             worldUp);
 
-        glm::vec3 lightColor; 
+        glm::vec3 lightColor;
 
         // temporary switch between nightvision
         if (nightVision) {
             lightColor = glm::vec3(0, 1, 0);
-        } else {
+        }
+        else {
             lightColor = glm::vec3(1, 1, 1);
 
             //Skybox Render if nightvision is off
@@ -510,10 +473,10 @@ int main(void)
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
         glm::vec3 lightPos = cameraCenter;
-        
 
-        
-        
+
+
+
 
         float ambientStr = 0.5f;
         glm::vec3 ambientColor = lightColor;
@@ -543,24 +506,31 @@ int main(void)
 
 
         /* * * * * * * * * * ADDING THE TEXTURE TO THE SHADERS * * * * * * * * * */
-        GLuint tex0Address = glGetUniformLocation(shaderProgram, "tex0");
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glUniform1i(tex0Address, 0);
+        //GLuint tex0Address = glGetUniformLocation(shaderProgram, "tex0");
+        //glBindTexture(GL_TEXTURE_2D, texture);
+        //glUniform1i(tex0Address, 0);
 
-        glBindVertexArray(VAO);
+        //glBindVertexArray(VAO);
 
-        // Drawing all existing models.
-        for (Model3D* model : models) {
-            model->draw(&shaderProgram, fullVertexData);
-        }
+        //// Drawing all existing models.
+        //for (Player* Player : Play) {
+        //    model->draw(&shaderProgram, fullVertexData);
+        //}
+        tankPos = (cameraPos + cameraCenter * 1.5f);
+        tankPos.y = -30.0f;
+        tankRot += 1.0f;
+        
+        CPlayer.updateRotation(yaw);
+        CPlayer.updatePosition(tankPos);
+        
+        CGround.draw(&shaderProgram);
+        CPlayer.draw(&shaderProgram);
 
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
 
     glfwTerminate();
     return 0;

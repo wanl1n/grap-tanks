@@ -1,26 +1,26 @@
-#include "Player.hpp"
+#include "Ground.hpp"
 
 using namespace models;
 
-Player::Player(glm::vec3 pos) {
-    this->pos = pos; // Take parameter as position.
+Ground::Ground() {
+    this->pos = glm::vec3(0, -35, 0); // Take parameter as position.
 
     // Since model is initially flipped (facing backwards), flip the model.
-    this->rotation = glm::vec3(0, 1, 0); // Set axis of rotation to y-axis.
+    this->rotation = glm::vec3(1, 0, 0); // Set axis of rotation to y-axis.
     this->theta = 0.0f; // Rotate around y-axis by 180 degrees to flip the model.
 
     // Since model is too big, scale it down to 0.1f.
-    this->scale = glm::vec3(0.1f, 0.1f, 0.1f);
+    this->scale = glm::vec3(10.0f, 1.0f, 10.0f);
 
     this->initialize();
 }
 
-void Player::initialize() {
+void Ground::initialize() {
     int img_width, img_height, color_channels;
 
     stbi_set_flip_vertically_on_load(true);
 
-    unsigned char* text_bytes = stbi_load("3D/plastictexture.jpg", // Texture path
+    unsigned char* text_bytes = stbi_load("3D/ground textures/AddWater_basecolor.png", // Texture path
         &img_width, // Width of the texture
         &img_height, // height of the texture
         &color_channels, // color channel
@@ -43,11 +43,11 @@ void Player::initialize() {
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
-        GL_RGB,
+        GL_RGBA,
         img_width,
         img_height,
         0,
-        GL_RGB,
+        GL_RGBA,
         GL_UNSIGNED_BYTE,
         text_bytes
     );
@@ -60,7 +60,7 @@ void Player::initialize() {
     glEnable(GL_DEPTH_TEST);
 
     // Load the 3D model obj file.
-    std::string path = "3D/M1A1.obj";
+    std::string path = "3D/GroundPlane.obj";
     std::vector<tinyobj::shape_t> shape;
     std::vector<tinyobj::material_t> material;
     std::string warning, error;
@@ -128,9 +128,8 @@ void Player::initialize() {
     glBindVertexArray(0);
 }
 
-void Player::draw(GLuint* shaderProgram) {
-    // Create the transformation matrix and apply the transformation attributes at draw.
-    this->pos.y -= 5;
+void Ground::draw(GLuint* shaderProgram) {
+    // Create the transformation matrix and apply the transformation attributes at draw.\
 
     glm::mat4 transformation_matrix = glm::translate(glm::mat4(1.0f), this->pos);
     transformation_matrix = glm::scale(transformation_matrix, this->scale);
@@ -155,10 +154,6 @@ void Player::draw(GLuint* shaderProgram) {
 
 }
 
-void Player::updatePosition(glm::vec3 pos) {
+void Ground::updatePosition(glm::vec3 pos) {
     this->pos = pos;
-}
-
-void Player::updateRotation(float rotation) {
-    this->theta = rotation;
 }
