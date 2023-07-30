@@ -3,8 +3,10 @@
 #include "main.hpp"
 #include "Player.hpp"
 #include "Ground.hpp"
+#include "MyCamera.hpp"
 
 using namespace models;
+using namespace cameras;
 
 float speed = 0.001f; // Movement speed of the camera.
 float radius = 30.f; // Distance of the spawned object to the camera.=
@@ -80,6 +82,7 @@ int main() {
 
     Player CPlayer(glm::vec3(0,0,0));
     Ground CGround = Ground();
+    MyCamera CCamera;
 
 
     //// Width, height, and color channels of a texture.
@@ -242,12 +245,12 @@ int main() {
 
     std::string facesSkybox[]{
 
-        "Skybox/rainbow_rt.png", //right
-        "Skybox/rainbow_lf.png", //left
-        "Skybox/rainbow_up.png", //top
-        "Skybox/rainbow_dn.png", //bottom
-        "Skybox/rainbow_ft.png", //front
-        "Skybox/rainbow_bk.png"  //back
+        "Skybox/right.png", //right
+        "Skybox/left.png", //left
+        "Skybox/top.png", //top
+        "Skybox/bottom.png", //bottom
+        "Skybox/front.png", //front
+        "Skybox/back.png"  //back
     };
 
     unsigned int skyboxTex;
@@ -268,7 +271,7 @@ int main() {
         unsigned char* data = stbi_load(facesSkybox[i].c_str(), &w, &h, &skyCChannel, 0);
 
         if (data) {
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
         }
 
         stbi_image_free(data);
@@ -368,69 +371,20 @@ int main() {
     while (!glfwWindowShouldClose(window))
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glUseProgram(shaderProgram);
 
         // Get the position of the cursor in the window.
+        double x_cursor_pos, y_cursor_pos;
         glfwGetCursorPos(window, &x_cursor_pos, &y_cursor_pos);
 
         /* * * * * ADJUSTING THE CAMERA ACCORDING TO THE MOUSE POSITION * * * * */
 
-        // Calculate the position of the mouse with the origin (0, 0) at the center of the window.
-        glm::vec2 mousePos = glm::vec2(x_cursor_pos - (width / 2), y_cursor_pos - (height / 2));
+        CCamera.run(&shaderProgram, x_cursor_pos, y_cursor_pos);
 
-        // Calculate the new camera center coordinates using Polar Coordinates.
-        // Calculating the degree of rotation around the y-axis(yaw) and the x-axis (pitch).
-        // Assuming the screen is a number line from -90 to 90 (to represent the degree of rotation from the center/origin),
-        // First, use linear interpolation to get the relative distance of the mouse cursor position.
-        // Second, multiply it with the new "scale" (-90 to 90) to get the degree.
-        // Third, convert it to radians.
-        float yaw = glm::radians((mousePos.x / (width / 2)) * theta_tot);
-        float pitch = glm::radians((mousePos.y / (height / 2)) * theta_tot);
-
-        // Limiting the degree in case of flipping.
-        if (yaw > 89.9f) yaw = 89.9f;
-        if (yaw < -89.9f) yaw = -89.9f;
-        if (pitch > 89.9f) pitch = 89.9f;
-        if (pitch < -89.9f) pitch = -89.9f;
-
-        // Finally get the direction in each axis by using Polar to Cartesian point conversion.
-        float xAxisRot = radius * sin(yaw) * cos(pitch);
-        float yAxisRot = radius * sin(pitch);
-        float zAxisRot = radius * cos(yaw) * cos(pitch);
-
-        // Update the camera center with the new calculated point.
-        // Finally, make sure to add the strafing movement of the camera to the x-axis.
-        glm::vec3 cameraCenter = glm::vec3(xAxisRot, yAxisRot , zAxisRot);
-        cameraCenter.y = -5;
-
-        // Next, calculate the position change based on where the camera center is.
-        glm::vec3 worldUp = glm::normalize(glm::vec3(0, 1.f, 0));
-
-        // If moving sideways, add or subtract the normalized right vector of the camera to move the camera position sideways.
-        if (isMovingLeft) {
-            cameraPos -= glm::normalize(glm::cross(cameraCenter, worldUp)) * 0.001f;
-        }
-        if (isMovingRight) {
-            cameraPos += glm::normalize(glm::cross(cameraCenter, worldUp)) * 0.001f;
-        }
-        // If moving forward or back, go towards or away from the camera center.
-        if (isMovingForward) {
-            cameraPos += 0.0001f * (cameraCenter);
-        }
-        if (isMovingBack) {
-            cameraPos -= 0.00001f * (cameraCenter);
-        }
-        
-        //Makes sure that camera can only move in the z and x axis
-        cameraPos.y = -15;
-
-        // Create the view matrix.
-        glm::mat4 viewMatrix = glm::lookAt(cameraPos,
-            cameraPos + cameraCenter, // to make sure cameracenter is always infront of camera pos.
-            worldUp);
 
         glm::vec3 lightColor = glm::vec3(1, 1, 1);
-        glm::vec3 lightPos;
-        float ambientStr = 0.1f;
+        glm::vec3 lightPos = cameraPos; 
+        float ambientStr = 0.3f;
         glm::vec3 ambientColor = lightColor;
 
         float specStr = 0.5f;
@@ -438,25 +392,28 @@ int main() {
 
         // temporary switch between nightvision
         if (nightVision) {
-            lightPos = cameraCenter;
+            lightPos = glm::vec3(0, 10, 0);
             lightColor = glm::vec3(0, 1, 0);
             ambientStr = 0.5f;
             ambientColor = lightColor;
+            CCamera.enableOrthographic();
         }
         else {
             lightColor = glm::vec3(1, 1, 1);
-            lightPos = glm::vec3(0, 20, 0);
-            ambientStr = 0.2f;
+            lightPos = glm::vec3(0, 10, 0);
+            lightPos.y = 10.0f;
+            ambientStr = 0.1f;
             ambientColor = lightColor;
+            CCamera.enablePerspective();
 
-            //Skybox Render if nightvision is off
+
             glDepthMask(GL_FALSE);
             glDepthFunc(GL_LEQUAL);
 
             glUseProgram(sky_shaderProgram);
 
             glm::mat4 skyView = glm::mat4(1.f);
-            skyView = glm::mat4(glm::mat3(viewMatrix));
+            skyView = glm::mat4(glm::mat3(CCamera.getViewMatrix()));
 
             unsigned int sky_ProjectionLoc = glGetUniformLocation(sky_shaderProgram, "projection");
             glUniformMatrix4fv(sky_ProjectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
@@ -478,7 +435,7 @@ int main() {
 
         // Updating the view Matrix in the shader program.
         unsigned int viewLoc = glGetUniformLocation(shaderProgram, "view");
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(CCamera.getViewMatrix()));
 
         // Updating the projection in the shader program.
         unsigned int projLoc = glGetUniformLocation(shaderProgram, "projection");
@@ -504,26 +461,13 @@ int main() {
         GLuint specPhongAddress = glGetUniformLocation(shaderProgram, "specPhong");
         glUniform1f(specPhongAddress, specPhong);
 
-
-        /* * * * * * * * * * ADDING THE TEXTURE TO THE SHADERS * * * * * * * * * */
-        //GLuint tex0Address = glGetUniformLocation(shaderProgram, "tex0");
-        //glBindTexture(GL_TEXTURE_2D, texture);
-        //glUniform1i(tex0Address, 0);
-
-        //glBindVertexArray(VAO);
-
-        //// Drawing all existing models.
-        //for (Player* Player : Play) {
-        //    model->draw(&shaderProgram, fullVertexData);
-        //}
-        tankPos = (cameraPos + cameraCenter * 1.5f);
-        tankPos.y = -30.0f;
+        tankPos.y = -30.0f; //keep the tank grounded
         
-        CPlayer.updateRotation((mousePos.x / (width / 2)) * theta_tot);
+        CPlayer.updateRotation((x_cursor_pos / (width / 2)) * theta_tot);
         CPlayer.updatePosition(tankPos);
-        
-        CGround.draw(&shaderProgram);
         CPlayer.draw(&shaderProgram);
+        CGround.draw(&shaderProgram);
+        
 
 
         glfwSwapBuffers(window);

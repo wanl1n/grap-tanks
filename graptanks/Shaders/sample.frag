@@ -31,6 +31,7 @@ void main() {
 	vec3 ambientCol = ambientColor * ambientStr;
 	vec3 normal = normalize(normCoord);
 	vec3 lightDir = normalize(lightPos - fragPos);
+	//vec3 lightDir = normalize(lightPos);
 
 	vec3 viewDir = normalize(cameraPos - fragPos);
 	vec3 reflectDir = reflect(-lightDir, normal);
