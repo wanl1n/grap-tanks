@@ -134,11 +134,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="glad.c" />
+    <ClCompile Include="Ground.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MyCamera.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="Sky.cpp" />
+    <ClCompile Include="Ground.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="main.hpp" />
+    <ClInclude Include="MyCamera.hpp" />
     <ClInclude Include="Player.hpp" />
+    <ClInclude Include="Sky.hpp" />
     <ClInclude Include="tiny_obj_loader.h" />
   </ItemGroup>
   <ItemGroup>
