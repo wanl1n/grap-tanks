@@ -23,3 +23,13 @@ glm::mat4 MyCamera::getViewMatrix() {
 glm::mat4 MyCamera::getProjMatrix() {
 	return this->projMatrix;
 }
+
+void MyCamera::setPos(glm::vec3 pos) {
+	this->pos = pos;
+	this->updateViewMatrix();
+}
+
+void MyCamera::setCenter(glm::vec3 center) {
+	this->center = center;
+	this->updateViewMatrix();
+}

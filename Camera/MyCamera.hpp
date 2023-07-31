@@ -29,6 +29,9 @@ namespace cameras {
 		glm::vec3 getPos();
 		glm::mat4 getViewMatrix();
 		glm::mat4 getProjMatrix();
+
+		void setPos(glm::vec3 pos);
+		void setCenter(glm::vec3 center);
 	};
 }
 

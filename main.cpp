@@ -35,6 +35,12 @@ float lowIntensity = 1.f;
 float medIntensity = 5.f;
 float highIntensity = 10.f;
 
+// Camera Perspectives
+bool useOrtho = false;
+bool usePerspective = true;
+bool swapPerspective = false;
+int perspective = 3;
+
 bool controllingMainObj = true;
 
 bool rotatePosXAxis = false;
@@ -53,9 +59,6 @@ float y_axis_mod = 0.f;
 float z_axis_mod = 0.f;
 
 bool changeProjection = false;
-bool usePerspective = true;
-bool useOrtho = false;
-
 
 float point_intensity_mod = 0.f;
 float direction_intensity_mod = 0.f;
@@ -91,11 +94,37 @@ void Key_Callback(
     float speed = 0.2f;
 
     /* Press Key */
+    // 1 Key
+    if (key == GLFW_KEY_1 && action == GLFW_PRESS) {
+        usePerspective = true;
+        useOrtho = true;
+        swapPerspective = true;
+    }
+    // 2 Key
+    if (key == GLFW_KEY_2 && action == GLFW_PRESS) {
+        usePerspective = false;
+        useOrtho = true;
+        swapPerspective = false;
+    }
+
     // F Key
     if (key == GLFW_KEY_F && action == GLFW_PRESS)
         adjustPointLightIntensity = true;
 
     /* Release Key */
+    // 1 Key
+    if (key == GLFW_KEY_1 && action == GLFW_RELEASE) {
+        usePerspective = true;
+        useOrtho = false;
+        swapPerspective = false;
+    }
+    // 2 Key
+    if (key == GLFW_KEY_2 && action == GLFW_PRESS) {
+        usePerspective = false;
+        useOrtho = true;
+        swapPerspective = false;
+    }
+    // F Key
     if (key == GLFW_KEY_F && action == GLFW_RELEASE)
         adjustPointLightIntensity = false;
 
@@ -209,6 +238,7 @@ void Key_Callback(
     //    increaseDirectionLightIntensity = false;
 
     /* Update */
+    // Point Light Intensity
     if (adjustPointLightIntensity) {
         pointLightIntensity++;
         if (pointLightIntensity >= 4)
@@ -216,6 +246,14 @@ void Key_Callback(
 
         std::cout << "[F Key Pressed]: Adjusting Point Light Intensity" << std::endl;
     }
+    // Swap between first and third person perspective
+    if (usePerspective) {
+        if (swapPerspective) {
+            if (perspective == 1) perspective = 3;
+            else if (perspective == 3) perspective = 1;
+        }
+    }
+
 
     // Change controlled object
     if (space)
@@ -503,11 +541,13 @@ int main()
     PointLight pointLight = PointLight(glm::vec3(tank.getPosition().x - 6.5f, tank.getPosition().y + 23.f, tank.getPosition().z - 57.f), glm::vec3(1.f), 200.f);
 
     /* Camera */
-    PerspectiveCamera perspectiveCamera = PerspectiveCamera(60.f, height, width, 0.1f, 300.f,
+    PerspectiveCamera thirdPersonPerspectiveCamera = PerspectiveCamera(60.f, height, width, 0.1f, 300.f,
         glm::vec3(0.f, 0.f, -10.f), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, -5.f));
+    PerspectiveCamera firstPersonPerspectiveCamera = PerspectiveCamera(60.f, height, width, 0.1f, 500.f,
+        glm::vec3(0.f, 0.f, 100.f), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, 5.f));
     OrthoCamera orthoCamera = OrthoCamera(-100.f, 100.f, -100.f, 100.f, -100.f, 1000.f,
         glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 1.f), glm::vec3(0.f, -10.f, 0.f));
-    MyCamera* camera = &perspectiveCamera;
+    MyCamera* camera = &thirdPersonPerspectiveCamera;
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -541,24 +581,31 @@ int main()
 
         /* Camera (view/projection) to be used */
         if (usePerspective) {
-            double xpos, ypos;
-            camera = &perspectiveCamera;
-            glfwGetCursorPos(window, &xpos, &ypos);
+            if (perspective == 3) {
+                double xpos, ypos;
+                camera = &thirdPersonPerspectiveCamera;
+                glfwGetCursorPos(window, &xpos, &ypos);
 
-            // Calculate how much the mouse moved in x direction
-            double x_mod = xpos - prev_xpos;
-            // Calculate how much the mouse moved in y direction
-            double y_mod = prev_ypos - ypos; // as we move to top y decreases
+                // Calculate how much the mouse moved in x direction
+                double x_mod = xpos - prev_xpos;
+                // Calculate how much the mouse moved in y direction
+                double y_mod = prev_ypos - ypos; // as we move to top y decreases
 
-            // Set new pos
-            prev_xpos = xpos;
-            prev_ypos = ypos;
+                // Set new pos
+                prev_xpos = xpos;
+                prev_ypos = ypos;
 
-            // Compute new pitch and yaw angles
-            pitch += (float)y_mod * 0.1f;
-            yaw += (float)x_mod * 0.1f;
+                // Compute new pitch and yaw angles
+                pitch += (float)y_mod * 0.1f;
+                yaw += (float)x_mod * 0.1f;
 
-            perspectiveCamera.calculateRotation(pitch, yaw);
+                thirdPersonPerspectiveCamera.calculateRotation(pitch, yaw);
+            }
+            if (perspective == 1) {
+                firstPersonPerspectiveCamera.setPos(glm::vec3(tank.getPosition().x, tank.getPosition().y + 30.f, tank.getPosition().z - 10.f));
+                firstPersonPerspectiveCamera.setCenter(glm::vec3(firstPersonPerspectiveCamera.getPos().x, firstPersonPerspectiveCamera.getPos().y, firstPersonPerspectiveCamera.getPos().z - 40.f));
+                camera = &firstPersonPerspectiveCamera;
+            }
         }
         if (useOrtho) {
             camera = &orthoCamera;
@@ -593,33 +640,6 @@ int main()
         lightModel.draw(&shaderProgram);
 
         /* Light Object Position*/
-        if (!controllingMainObj) {
-            //glm::vec3 rotation;
-            //// Polar to coordinate calculation and using SOH CAH TOA
-            //// first triangle in xyz cartesian plane: (points are in origin, xz plane, and y axis)
-            //// hypotenuse = camera forward (normalized) = length of 1
-            //// y = sin of pitch angle
-            //// xz plane = cos of pitch angle
-            //rotation.y = radius * sin(glm::radians(orbitPitch));
-            //// second triangle in xyz cartesian plane: (points are in origin, x axis, and z axis)
-            //// hypotenuse = xz plane = cos of pitch angle
-            //// x = cos of yaw * cos of pitch
-            //// z = sin of yaw * cos of pitch
-            //rotation.x = radius * cos(glm::radians(orbitYaw)) * cos(glm::radians(orbitPitch));
-            //rotation.z = radius * sin(glm::radians(orbitYaw)) * cos(glm::radians(orbitPitch));
-
-            //// Rotate base on roll
-            //glm::mat4 transform = glm::mat4(1.0f);
-            //transform = glm::rotate(transform, glm::radians(orbitRoll), glm::vec3(0.f, 0.f, 1.f));
-
-            //glm::vec4 newPos = glm::vec4(rotation.x, rotation.y, rotation.z, 1);
-
-            //// Vec multiplication
-            //newPos = transform * newPos;
-
-            //// Set location
-            //lightModel.setPosition(glm::vec3(newPos[0], newPos[1], newPos[2]));
-        }
         lightModel.draw(&shaderProgram);
 
         // Reset shader program 
@@ -692,31 +712,6 @@ int main()
         else
             intensity = highIntensity;
         glUniform1f(pl_multiplierAddress, pointLight.getMultiplier() * intensity);
-
-
-        //// If light source is selected
-        //if (!controllingMainObj) {
-        //    // If increase point light
-        //    if (increasePointLightIntensity) {
-        //        pointLight.setMultiplier(pointLight.getMultiplier() + abs(point_intensity_mod));
-        //        glUniform1f(pl_multiplierAddress, pointLight.getMultiplier());
-        //    }
-        //    // If decrease point light
-        //    if (decreasePointLightIntensity) {
-        //        pointLight.setMultiplier(pointLight.getMultiplier() - abs(point_intensity_mod));
-        //        glUniform1f(pl_multiplierAddress, pointLight.getMultiplier());
-        //    }
-        //    // If increase direction light
-        //    if (increaseDirectionLightIntensity) {
-        //        directionLight.setMultiplier(directionLight.getMultiplier() + abs(direction_intensity_mod));
-        //        glUniform1f(dl_multiplierAddress, directionLight.getMultiplier());
-        //    }
-        //    // If decrease direction light
-        //    if (decreaseDirectionLightIntensity) {
-        //        directionLight.setMultiplier(directionLight.getMultiplier() - abs(direction_intensity_mod));
-        //        glUniform1f(dl_multiplierAddress, directionLight.getMultiplier());
-        //    }
-        //}
 
         /* Draw Main Object */
         /* Update Main Object */
