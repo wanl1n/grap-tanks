@@ -12,6 +12,28 @@ Light::Light(glm::vec3 pos, glm::vec3 color, float multiplier, float ambientStr,
 	this->specPhong = specPhong;
 }
 
+// Passes the common properties to the shader program.
+void Light::applyToShader(GLuint* shaderProgram, glm::vec3 cameraPos) {
+
+	this->applyUniqueValuesToShader(shaderProgram);
+
+	GLuint cameraPosAddress = glGetUniformLocation(*shaderProgram, "cameraPos");
+	glUniform3fv(cameraPosAddress, 1, glm::value_ptr(cameraPos));
+}
+
+// Accepts offset values and adds them to the light position.
+void Light::moveLight(float x_mod, float y_mod, float z_mod) {
+    this->pos += glm::vec3(x_mod, y_mod, z_mod);
+}
+
+// Adds the accepted value to the intensity multiplier to alter.
+void Light::changeIntensity(float delta) {
+    this->multiplier += delta;
+
+    // Limit the intensity so it doesn't go negative and take light away.
+    if (this->multiplier <= 0) this->multiplier = 0.01f;
+}
+
 void Light::setMultiplier(float multiplier) {
 	this->multiplier = multiplier;
 
@@ -25,6 +47,11 @@ void Light::setPos(glm::vec3 pos) {
 void Light::setColor(glm::vec3 color) {
 	this->color = color;
 }
+
+void Light::setIntensity(float intensity) {
+	this->multiplier *= intensity;
+}
+
 
 glm::vec3 Light::getPos() {
 	return this->pos;

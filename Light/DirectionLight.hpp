@@ -9,20 +9,24 @@
 
 namespace lights {
 	class DirectionLight : public Light {
-	// Atributes
-	private: 
-		glm::vec3 pointsAt;
+		// Atributes
+		private: 
+			glm::vec3 pointsAt;
 
-		glm::vec3 direction;
+			glm::vec3 direction;
 
-	// Constructor
-	public:
-		DirectionLight(glm::vec3 pos = glm::vec3(0.f), glm::vec3 pointsAt = glm::vec3(0.f), glm::vec3 color = glm::vec3(1.f), float multipler = 1.f, float ambientStr = 0.1f,
-			glm::vec3 ambientColor = glm::vec3(1.f), float specStr = 0.5f, float specPhong = 16.f);
-	
-	// Getters/Setters
-	public:
-		glm::vec3 getDirection();
+		// Constructor
+		public:
+			DirectionLight(glm::vec3 pos = glm::vec3(0.f), glm::vec3 pointsAt = glm::vec3(0.f), glm::vec3 color = glm::vec3(1.f), float multipler = 1.f, float ambientStr = 0.1f,
+				glm::vec3 ambientColor = glm::vec3(1.f), float specStr = 0.5f, float specPhong = 16.f);
+
+		public:
+			void applyUniqueValuesToShader(GLuint* shaderProgram);
+			void turnOff();
+
+		// Getters/Setters
+		public:
+			glm::vec3 getDirection();
 	};
 }
 

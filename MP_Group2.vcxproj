@@ -142,6 +142,8 @@
     <ClCompile Include="Light\PointLight.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Model\Model.cpp" />
+    <ClCompile Include="Model\Skybox.cpp" />
+    <ClCompile Include="Shaders\Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera\MyCamera.hpp" />
@@ -152,6 +154,8 @@
     <ClInclude Include="Light\PointLight.hpp" />
     <ClInclude Include="MainInclude.hpp" />
     <ClInclude Include="Model\Model.hpp" />
+    <ClInclude Include="Model\Skybox.hpp" />
+    <ClInclude Include="Shaders\Shader.hpp" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="tiny_obj_loader.h" />
   </ItemGroup>

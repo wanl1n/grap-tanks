@@ -42,5 +42,5 @@ void PerspectiveCamera::calculateRotation(float pitch, float yaw) {
 
 	this->worldUp = glm::normalize(glm::vec3(0.f, 1.f, 0.f));
 
-	this->updateViewMatrix();
+	this->viewMatrix = glm::lookAt(this->pos, this->center, this->worldUp);
 }

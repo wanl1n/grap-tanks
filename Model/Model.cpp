@@ -198,7 +198,13 @@ void Model::setRotation(glm::vec3 rotate) {
 	this->rotate = rotate;
 }
 
-void Model::draw(GLuint* shaderProgram) {
+void Model::draw(GLuint* shaderProgram, bool texExists) {
+
+	GLuint tex_existsAddress = glGetUniformLocation(*shaderProgram, "tex_exists");
+	glUniform1f(tex_existsAddress, texExists);
+
+	GLuint colorAddress = glGetUniformLocation(*shaderProgram, "color");
+	glUniform4fv(colorAddress, 1, glm::value_ptr(this->color));
 
 	/* TRANSFORMATION MATRIX */
 	glm::mat4 identity_matrix4 = glm::mat4(1.f);
@@ -229,4 +235,7 @@ void Model::draw(GLuint* shaderProgram) {
 	glBindVertexArray(VAO);
 	// Draw using the vertex array
 	glDrawArrays(GL_TRIANGLES, 0, fullVertexData.size() / 8);
+
+	// Reset to default
+	glUniform1f(tex_existsAddress, true);
 }

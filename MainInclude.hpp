@@ -6,11 +6,15 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "cmath"
+
 #include "tiny_obj_loader.h"
 #include "stb_image.h"
 
 #include <iostream>
+#include "fstream"
+#include "sstream"
 #include <string>
+#include "cmath"
+#include "vector"
 
 #endif

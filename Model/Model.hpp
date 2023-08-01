@@ -7,7 +7,7 @@
 namespace models {
 	class Model {
 		// Attributes
-	private:
+	protected:
 		glm::vec3 pos;
 		glm::vec3 scale;
 		glm::vec3 rotate;
@@ -32,7 +32,7 @@ namespace models {
 		void setColor(glm::vec4 color);
 		void setRotation(glm::vec3 rotate);
 
-		void draw(GLuint* shaderProgram);
+		void draw(GLuint* shaderProgram, bool texExists);
 
 	};
 }
