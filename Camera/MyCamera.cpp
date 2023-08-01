@@ -40,12 +40,16 @@ glm::mat4 MyCamera::getProjMatrix() {
 	return this->projMatrix;
 }
 
+glm::vec3 MyCamera::getCameraCenter() {
+	return this->center;
+}
+
 void MyCamera::setPos(glm::vec3 pos) {
 	this->pos = pos;
 	this->viewMatrix = glm::lookAt(this->pos, this->center, this->worldUp);
 }
 
-void MyCamera::setCenter(glm::vec3 center) {
-	this->center = center;
+void MyCamera::setCenterOffset(float offset) {
+	this->center.z = offset;
 	this->viewMatrix = glm::lookAt(this->pos, this->center, this->worldUp);
 }

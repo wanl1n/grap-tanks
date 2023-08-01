@@ -21,16 +21,22 @@ namespace models {
 		// Constructors
 	public:
 		Model(std::string strObjPath, std::string strTexturePath,
-			glm::vec3 pos = glm::vec3(0.f), glm::vec3 scale = glm::vec3(1.f), glm::vec3 rotate = glm::vec3(0.f), glm::vec4 color = glm::vec4(0.f));
+			glm::vec3 pos = glm::vec3(0.f), 
+			glm::vec3 scale = glm::vec3(1.f), 
+			glm::vec3 rotate = glm::vec3(0.f), 
+			glm::vec4 color = glm::vec4(0.f));
 
 		// Behavior
 	public:
 		glm::vec3 getPosition();
 		glm::vec3 getColor();
 		glm::vec3 getRotation();
+
 		void setPosition(glm::vec3 pos);
+		void move(glm::vec3 offset);
 		void setColor(glm::vec4 color);
 		void setRotation(glm::vec3 rotate);
+		void rotateBy(glm::vec3 offset);
 
 		void draw(GLuint* shaderProgram, bool texExists);
 

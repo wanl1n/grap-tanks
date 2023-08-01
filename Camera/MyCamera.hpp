@@ -20,7 +20,7 @@ namespace cameras {
 		public:
 			MyCamera(glm::vec3 pos = glm::vec3(0.f), 
 					 glm::vec3 worldUp = glm::vec3(0.f, 1.f, 0.f), 
-					 glm::vec3 center = glm::vec3(0.f, 0.f, -5.f));
+					 glm::vec3 center = normalize(glm::vec3(0.f, 0.f, -5.f)));
 	
 		// Behaviors
 		public:
@@ -32,8 +32,11 @@ namespace cameras {
 			glm::mat4 getViewMatrix();
 			glm::mat4 getProjMatrix();
 
+			// For external calculations
+			glm::vec3 getCameraCenter();
+
 			void setPos(glm::vec3 pos);
-			void setCenter(glm::vec3 center);
+			void setCenterOffset(float offset);
 	};
 }
 

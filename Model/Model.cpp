@@ -190,12 +190,20 @@ void Model::setPosition(glm::vec3 pos) {
 	this->pos = pos;
 }
 
+void Model::move(glm::vec3 offset) {
+	this->pos += offset;
+}
+
 void Model::setColor(glm::vec4 color) {
 	this->color = color;
 }
 
 void Model::setRotation(glm::vec3 rotate) {
 	this->rotate = rotate;
+}
+
+void Model::rotateBy(glm::vec3 offset) {
+	this->rotate += offset;
 }
 
 void Model::draw(GLuint* shaderProgram, bool texExists) {
