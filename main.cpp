@@ -251,6 +251,7 @@ void Key_Callback(
         if (swapPerspective) {
             if (perspective == 1) perspective = 3;
             else if (perspective == 3) perspective = 1;
+            std::cout << "[1 Key Pressed]: Changing Perspective Camera" << std::endl;
         }
     }
 
@@ -545,7 +546,7 @@ int main()
         glm::vec3(0.f, 0.f, -10.f), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, -5.f));
     PerspectiveCamera firstPersonPerspectiveCamera = PerspectiveCamera(60.f, height, width, 0.1f, 500.f,
         glm::vec3(0.f, 0.f, 100.f), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, 5.f));
-    OrthoCamera orthoCamera = OrthoCamera(-100.f, 100.f, -100.f, 100.f, -100.f, 1000.f,
+    OrthoCamera orthoCamera = OrthoCamera(-100.f, 100.f, -100.f, 100.f, -500.f, 1000.f,
         glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 1.f), glm::vec3(0.f, -10.f, 0.f));
     MyCamera* camera = &thirdPersonPerspectiveCamera;
 
@@ -719,6 +720,13 @@ int main()
             tank.setRotation(glm::vec3(tank.getRotation().x + x_axis_mod,
                 tank.getRotation().y + y_axis_mod,
                 tank.getRotation().z + z_axis_mod));
+            // Point Light is attached to tank
+            if (x_axis_mod != 0 || y_axis_mod != 0 || z_axis_mod != 0) {
+                glm::vec3 newPos = glm::vec3(tank.getPosition() + tank.getRotation());
+                pointLight.setPos(glm::vec3(newPos.x, newPos.y, newPos.z));
+            }
+
+            std::cout << pointLight.getPos().x << ", " << pointLight.getPos().y << ", " << pointLight.getPos().z << std::endl;
             x_axis_mod = 0.f;
             y_axis_mod = 0.f;
             z_axis_mod = 0.f;
