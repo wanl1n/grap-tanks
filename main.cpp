@@ -33,62 +33,26 @@ float speed = 0.2f;
 
 /* Lighting */
 // Cycle through intensity of point light using F Key
-bool adjustPointLightIntensity = false;
-int pointLightIntensity = 1;
+bool adjustheadlightsIntensity = false;
+int headlightsIntensity = 1;
 float lowIntensity = 1.f;
 float medIntensity = 5.f;
 float highIntensity = 10.f;
 
-// Camera Perspectives
-bool useOrtho = false;
-bool usePerspective = true;
-bool swapPerspective = false;
-int perspective = 3;
-
-bool controllingMainObj = true;
-
-bool rotatePosXAxis = false;
-bool rotateNegXAxis = false;
-
-bool rotatePosYAxis = false;
-bool rotateNegYAxis = false;
-
-bool rotatePosZAxis = false;
-bool rotateNegZAxis = false;
-
 bool space = false;
-
-float x_axis_mod = 0.f;
-float y_axis_mod = 0.f;
-float z_axis_mod = 0.f;
-
-bool changeProjection = false;
-
-float point_intensity_mod = 0.f;
-float direction_intensity_mod = 0.f;
 
 /* Camera global variables */
 float radius = 50.f;
 float pitch = 0.f; // initial pitch is 0 degrees (positive x axis)
 float yaw = 270.f; // initial yaw is 270 degrees (-90 degrees of positive x axis; negative z axis)
+float yrot = 90.f;
 
 /* Mouse variables */
 double prev_xpos = width / 2;
 double prev_ypos = height / 2;
 
-/* Orbit variables */
-float orbitPitch = 0.f;
-float orbitYaw = 270.f;
-float orbitRoll = 0.f;
-bool orbitPosX = false;
-bool orbitNegX = false;
-bool orbitPosY = false;
-bool orbitNegY = false;
-bool orbitPosZ = false;
-bool orbitNegZ = false;
-
 // ----- Player Controls ----- //
-bool drivingTank = true;       // using 3rd person perspective camera
+bool drivingTank = true;        // using 3rd person perspective camera
 bool usingBinoculars = false;   // using 1st person perspective camera
 bool usingOverhead = false;
 
@@ -173,17 +137,17 @@ void Key_Callback(GLFWwindow* window, int key, int scancode, int action, int mod
         space = false;
 
     // Point Light Intensity Controls
-    if (key == GLFW_KEY_F && action == GLFW_PRESS) adjustPointLightIntensity = true;
+    if (key == GLFW_KEY_F && action == GLFW_PRESS) adjustheadlightsIntensity = true;
 
     // Point Light Intensity
-    if (adjustPointLightIntensity) {
-        adjustPointLightIntensity = false;
+    if (adjustheadlightsIntensity) {
+        adjustheadlightsIntensity = false;
 
-        pointLightIntensity++;
-        if (pointLightIntensity >= 4)
-            pointLightIntensity = 1;
+        headlightsIntensity++;
+        if (headlightsIntensity >= 4)
+            headlightsIntensity = 1;
 
-        std::cout << "[F Key Pressed]: Adjusting Point Light Intensity to " << pointLightIntensity << std::endl;
+        std::cout << "[F Key Pressed]: Adjusting Point Light Intensity to " << headlightsIntensity << std::endl;
     }
 
     if (zoomingIn) std::cout << "Binoculars Zooming In." << std::endl;
@@ -218,7 +182,6 @@ int main()
     /* Loading of 3D Models */
     // Main Tank Model
     Model tank = Model("3D/Tank/M1A1.obj", "3D/Tank/plastictexture.jpg", glm::vec3(0.f, -30.f, 0.f), glm::vec3(0.25f), glm::vec3(0.f, 180.f, 0.f));
-    //Model tank = Model("3D/cinna.obj", "3D/cinna.png", glm::vec3(0.f, -30.f, 0.f), glm::vec3(20.f), glm::vec3(0.f, 180.f, 0.f));
     // Place Light Source Model away from Main Object
     Model lightModel = Model("3D/Light.obj", "", glm::vec3(-100.f, 90.f, -3.f), glm::vec3(10.f), glm::vec3(0.f), glm::vec4(238.f / 255.f, 228.f / 255.f, 170.f / 255.f, 1.f));
 
@@ -228,9 +191,9 @@ int main()
 
     /* Light Sources */
     // Direction Light: From the Moon 
-    DirectionLight directionLight = DirectionLight(lightModel.getPosition(), glm::vec3(0.f), lightModel.getColor(), 5.f);
+    DirectionLight moonlight = DirectionLight(lightModel.getPosition(), glm::vec3(0.f), lightModel.getColor(), 5.f);
     // Point Light: Position is at front of tank
-    PointLight pointLight = PointLight(glm::vec3(tank.getPosition().x - 6.5f, tank.getPosition().y + 23.f, tank.getPosition().z - 57.f), glm::vec3(1.f), 200.f);
+    PointLight headlights = PointLight(glm::vec3(tank.getPosition().x - 6.5f, tank.getPosition().y + 23.f, tank.getPosition().z - 57.f), glm::vec3(1.f), 200.f);
 
     /* Camera */
     PerspectiveCamera thirdPersonPerspectiveCamera = PerspectiveCamera(60.f, height, width, 0.1f, 300.f,
@@ -253,18 +216,14 @@ int main()
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the depth buffer as well
 
-        skybox.draw(mainCamera->getViewMatrix(), mainCamera->getProjMatrix());
-        
-        glUseProgram(*litShader.getShaderProgram());
-
         // ----------------------- UPDATING VALUES -------------------------- //
         // Camera Switching Controls
         if (usingOverhead) {
 
             mainCamera = &orthoCamera;
 
-            pointLight.setColor(glm::vec3(1, 1, 1));
-            directionLight.setColor(glm::vec3(1, 1, 1));
+            headlights.setColor(glm::vec3(1, 1, 1));
+            moonlight.setColor(glm::vec3(1, 1, 1));
         }
         if (drivingTank) {
 
@@ -285,10 +244,10 @@ int main()
             pitch += (float)y_mod * 0.1f;
             yaw += (float)x_mod * 0.1f;
 
-            thirdPersonPerspectiveCamera.calcMouseRotate(pitch, yaw);
+            thirdPersonPerspectiveCamera.calcMouseRotate(pitch, yaw, tank.getPosition());
 
-            pointLight.setColor(glm::vec3(1, 1, 1));
-            directionLight.setColor(glm::vec3(1, 1, 1));
+            headlights.setColor(glm::vec3(1, 1, 1));
+            moonlight.setColor(glm::vec3(1, 1, 1));
         }
         if (usingBinoculars) {
             firstPersonPerspectiveCamera.setPos(glm::vec3(tank.getPosition().x, tank.getPosition().y + 30.f, tank.getPosition().z - 10.f));
@@ -296,60 +255,85 @@ int main()
 
             mainCamera = &firstPersonPerspectiveCamera;
 
-            pointLight.setColor(glm::vec3(0, 1, 0));
-            directionLight.setColor(glm::vec3(0, 1, 0));
+            headlights.setColor(glm::vec3(0, 1, 0));
+            moonlight.setColor(glm::vec3(0, 1, 0));
         }
 
         // If Main Camera exists, update the projection and view matrix
         if (mainCamera != NULL) mainCamera->updateShaderViewProj(litShader.getShaderProgram());
         
         // Update Tank Headlights Intensity
-        if (pointLightIntensity == 1)       pointLight.setMultiplier(lowIntensity);
-        else if (pointLightIntensity == 2)  pointLight.setMultiplier(medIntensity);
-        else                                pointLight.setMultiplier(highIntensity);
+        if (headlightsIntensity == 1)       headlights.setMultiplier(lowIntensity);
+        else if (headlightsIntensity == 2)  headlights.setMultiplier(medIntensity);
+        else                                headlights.setMultiplier(highIntensity);
 
         // Update the Tank Movements
         // 1. Driving Tank / Third person perspective view
         if (drivingTank) {
             // Di pa to final - dapat based on camera center yung forward and backward --------------------- !!!
-            if (movingForward) tank.move(glm::vec3(0, 0, speed));
-            if (movingBackward) tank.move(glm::vec3(0, 0, -speed));
-            if (turningRight) tank.rotateBy(glm::vec3(0, speed, 0));
-            if (turningLeft) tank.rotateBy(glm::vec3(0, -speed, 0));
+            glm::vec3 moveDirection = glm::vec3(cos(glm::radians(yrot)), 0, sin(glm::radians(yrot)));
 
-            // Also update the lights of the tank. (Pwedeng gamitin yung position ng first person perspective camera?)
+            if (movingForward) { 
+                tank.move(-moveDirection); 
+                //thirdPersonPerspectiveCamera.move(-moveDirection);
+            }
+            if (movingBackward) { 
+                tank.move(moveDirection); 
+                //thirdPersonPerspectiveCamera.move(moveDirection);
+            }
 
-            //    // Point Light is attached to tank
-            //    if (x_axis_mod != 0 || y_axis_mod != 0 || z_axis_mod != 0) {
-            //        glm::vec3 newPos = glm::vec3(tank.getPosition() + tank.getRotation());
-            //        pointLight.setPos(glm::vec3(newPos.x, newPos.y, newPos.z));
-            //    }
+            // Turning around
+            if (turningRight) { 
+                tank.rotateBy(glm::vec3(0, -speed, 0));
+                yrot += speed;
+                // Make sure the binoculars rotate with the tank.
+                firstPersonPerspectiveCamera.setPos(tank.getPosition());
+                firstPersonPerspectiveCamera.calcKeyRotate(glm::vec3(speed, 0, 0));
+                firstPersonPerspectiveCamera.setPos(glm::vec3(tank.getPosition().x, tank.getPosition().y + 30.f, tank.getPosition().z - 10.f));
+            }
+            if (turningLeft) { 
+                tank.rotateBy(glm::vec3(0, speed, 0)); 
+                yrot -= speed;
+                // Make sure the binoculars rotate with the tank.
+                firstPersonPerspectiveCamera.setPos(tank.getPosition());
+                firstPersonPerspectiveCamera.calcKeyRotate(glm::vec3(-speed, 0, 0));
+                firstPersonPerspectiveCamera.setPos(glm::vec3(tank.getPosition().x, tank.getPosition().y + 30.f, tank.getPosition().z - 10.f));
+            }
+
+            // Also update the light from the tank.
+            headlights.setPos(firstPersonPerspectiveCamera.getPos());
         }
         // 2. Using Binoculars / First Person perspective view
         else if (usingBinoculars) {
-            if (lookingUp) firstPersonPerspectiveCamera.calcKeyRotate(glm::vec2(0, speed));
-            if (lookingDown) firstPersonPerspectiveCamera.calcKeyRotate(glm::vec2(0, -speed));
-            if (lookingRight) firstPersonPerspectiveCamera.calcKeyRotate(glm::vec2(speed, 0));
-            if (lookingLeft) firstPersonPerspectiveCamera.calcKeyRotate(glm::vec2(-speed, 0));
+            if (lookingUp) firstPersonPerspectiveCamera.calcKeyRotate(glm::vec3(0, speed, 0));
+            if (lookingDown) firstPersonPerspectiveCamera.calcKeyRotate(glm::vec3(0, -speed, 0));
+            if (lookingRight) firstPersonPerspectiveCamera.calcKeyRotate(glm::vec3(speed, 0, 0));
+            if (lookingLeft) firstPersonPerspectiveCamera.calcKeyRotate(glm::vec3(-speed, 0, 0));
             if (zoomingIn) firstPersonPerspectiveCamera.zoom(-speed);
             if (zoomingOut) firstPersonPerspectiveCamera.zoom(speed);
         }
 
         // ---------------------- RENDERING OBJECTS ------------------------- //
+        // First draw the skybox
+        skybox.draw(mainCamera->getViewMatrix(), mainCamera->getProjMatrix());
+
+        // Reset the shader program for the objects.
+        glUseProgram(*litShader.getShaderProgram());
+
         // Moon / Directional Light Source
         lightModel.draw(litShader.getShaderProgram(), false);
 
         // Applying the lighting to the shader program for the objects.
-        directionLight.applyUniqueValuesToShader(litShader.getShaderProgram());
-        pointLight.applyUniqueValuesToShader(litShader.getShaderProgram());
+        moonlight.applyUniqueValuesToShader(litShader.getShaderProgram());
+        headlights.applyUniqueValuesToShader(litShader.getShaderProgram());
 
         /* Draw Main Object */
         
         tank.draw(litShader.getShaderProgram(), true);
 
         // Reset lighting to render lightModel unaffected by light
-        pointLight.turnOff();
-        directionLight.turnOff();
+        headlights.turnOff();
+        moonlight.turnOff();
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);

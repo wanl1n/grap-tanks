@@ -190,10 +190,6 @@ void Model::setPosition(glm::vec3 pos) {
 	this->pos = pos;
 }
 
-void Model::move(glm::vec3 offset) {
-	this->pos += offset;
-}
-
 void Model::setColor(glm::vec4 color) {
 	this->color = color;
 }
@@ -246,4 +242,8 @@ void Model::draw(GLuint* shaderProgram, bool texExists) {
 
 	// Reset to default
 	glUniform1f(tex_existsAddress, true);
+}
+
+void Model::move(glm::vec3 offset) {
+	this->pos += offset;
 }
