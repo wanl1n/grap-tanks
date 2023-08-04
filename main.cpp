@@ -30,7 +30,7 @@ using namespace lights;
 using namespace shaders;
 using namespace players;
 
-/* Global Variables */
+// Global Variables
 float width = 720.f;
 float height = 720.f;
 float speed = 1.5f;
@@ -48,7 +48,7 @@ float yrot = 90.f;
 double prev_xpos = width / 2;
 double prev_ypos = height / 2;
 
-// Keyboard Input Function
+// Keyboard Input Function -- Updates the Player object states.
 void Key_Callback(GLFWwindow* window, int key, int scancode, int action, int mod) {
 
     // Switching Camera Controls
@@ -127,7 +127,10 @@ void Key_Callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_F && action == GLFW_PRESS) player.setAdjustingHeadlights(true);
     
     // Jumping
-    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) { player.setJumping(true); glfwSetTime(0); }
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) { 
+        if (!player.isJumping()) glfwSetTime(0);
+        player.setJumping(true);
+    }
 }
 
 int main()
@@ -236,6 +239,7 @@ int main()
                                             glm::vec3(0.f, 0.f, 0.f), 
                                             glm::vec3(0.f, 0.f, -1.f), 
                                             glm::vec3(0.f, -10.f, 0.f));
+    // Set the initial camera to the third person perspective camera
     MyCamera* mainCamera = &thirdPersonPerspectiveCamera;
 
     // Put the headlights at the first person camera position
@@ -321,11 +325,13 @@ int main()
 
             if (player.isMovingForward()) { 
                 tank.move(-moveDirection); 
-                firstPersonPerspectiveCamera.setCenterOffset(-moveDirection); 
+                firstPersonPerspectiveCamera.setPos(glm::vec3(tank.getPosition().x, tank.getPosition().y + 30.f, tank.getPosition().z - 10.f));
+                firstPersonPerspectiveCamera.setCenterOffset(-moveDirection);
             }
             if (player.isMovingBackward()) { 
                 tank.move(moveDirection); 
-                firstPersonPerspectiveCamera.setCenterOffset(moveDirection); 
+                firstPersonPerspectiveCamera.setPos(glm::vec3(tank.getPosition().x, tank.getPosition().y + 30.f, tank.getPosition().z - 10.f));
+                firstPersonPerspectiveCamera.setCenterOffset(moveDirection);
             }
 
             // Turning around
@@ -351,7 +357,10 @@ int main()
             glUniform3fv(spotDirAddress, 1, glm::value_ptr(moveDirection));
 
             // Also update the light from the tank.
-            headlights.setPos(firstPersonPerspectiveCamera.getCameraCenter() + glm::vec3(0, 10.f, -20.f));
+            glm::vec3 newHeadlightsPos = firstPersonPerspectiveCamera.getPos() - moveDirection * 10.0f;
+            newHeadlightsPos.x -= 10.f; // Center it because the first person camera isn't at the center front.
+            newHeadlightsPos.y = 15.f; // Raise it a bit because it's on the ground
+            headlights.setPos(newHeadlightsPos);
         }
         // 2. Using Binoculars / First Person perspective view
         else if (player.isUsingBinoculars()) {
@@ -373,11 +382,13 @@ int main()
         // 3. Using Overhead drone view / Orthographic Top View
         else if (player.isUsingDrone()) {
 
+            // Move the camera on either the X or Z axis to move the orthographic camera.
             if (player.isDroningForward()) orthoCamera.move(glm::vec3(0, 0, -speed));
             if (player.isDroningBackward()) orthoCamera.move(glm::vec3(0, 0, speed));
             if (player.isDroningLeft()) orthoCamera.move(glm::vec3(-speed, 0, 0));
             if (player.isDroningRight()) orthoCamera.move(glm::vec3(speed, 0, 0));
 
+            // To check the input is correct
             if (player.isDroningForward()) std::cout << "Drone View: Forward." << std::endl;
             if (player.isDroningBackward()) std::cout << "Drone View: Backward." << std::endl;
             if (player.isDroningLeft()) std::cout << "Drone View: Left." << std::endl;
@@ -388,8 +399,11 @@ int main()
         if (player.isJumping()) {
             std::cout << "Jumping." << std::endl;
 
+            // Stop jumping when 1 second has passed
             if (glfwGetTime() > 1.f) player.setJumping(false);
+            // Drop when half a second has passed.
             else if (glfwGetTime() > 0.5f) tank.move(glm::vec3(0, -speed * 9.81f * glfwGetTime(), 0));
+            // Jump up for half a second.
             else if (glfwGetTime() > 0.f) tank.move(glm::vec3(0, speed * 9.81f * glfwGetTime(), 0));
         }
 

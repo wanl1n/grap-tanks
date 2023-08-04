@@ -16,6 +16,7 @@ namespace cameras {
 			float near, far;
 
 			glm::vec3 panRotate;
+			glm::vec3 panCenter;
 
 		// Constructors
 		public:
