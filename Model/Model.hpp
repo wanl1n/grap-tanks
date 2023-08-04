@@ -24,7 +24,9 @@ namespace models {
 
 			int attribSize;
 
-			// Constructors
+			GLuint sticker_tex;
+
+		// Constructors
 		public:
 			Model(std::string strObjPath, const char* pathTex, const char* pathNorm,
 				glm::vec3 pos = glm::vec3(0.f), 
@@ -33,9 +35,10 @@ namespace models {
 				glm::vec4 color = glm::vec4(0.f));
 			void loadModelData(std::string path);
 			GLuint loadTexture(const char* path, GLuint texture_ind);
+			void loadSticker();
 			void generateBuffers();
 
-			// Behavior
+		// Behavior
 		public:
 			glm::vec3 getPosition();
 			glm::vec3 getColor();

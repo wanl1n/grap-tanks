@@ -5,7 +5,6 @@ using namespace players;
 Player::Player(Model* tank) {
     this->tank = tank;
 
-
     // ----- Player Controls ----- //
     drivingTank = true;        // using 3rd person perspective camera
     usingBinoculars = false;   // using 1st person perspective camera
@@ -33,12 +32,13 @@ Player::Player(Model* tank) {
     droningLeft = false;       // A
     // --------------------------- //
 
-
     adjustheadlightsIntensity = false;
     headlightsIntensity = 1;
     lowIntensity = 100.f;
     medIntensity = 500.f;
     highIntensity = 1000.f;
+
+    this->jumping = false;
 }
 
 bool Player::isDrivingTank() {
@@ -102,7 +102,7 @@ bool Player::isDroningForward() {
 }
 
 bool Player::isDroningBackward() {
-    return droningRight;
+    return droningBackward;
 }
 
 bool Player::isDroningRight() {
@@ -220,4 +220,12 @@ void Player::setAdjustingHeadlights(bool x) {
 
 void Player::setModel(Model* tank) {
     this->tank = tank;
+}
+
+bool Player::isJumping() {
+    return this->jumping;
+}
+
+void Player::setJumping(bool x) {
+    this->jumping = x;
 }

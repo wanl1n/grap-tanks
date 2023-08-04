@@ -10,7 +10,9 @@ Model::Model(std::string strObjPath, const char* pathTex, const char* pathNorm,
 
 	if (pathTex != "") this->texture = loadTexture(pathTex, GL_TEXTURE0);
 	if (pathNorm != "") this->norm_tex = loadTexture(pathNorm, GL_TEXTURE1);
-	
+
+	this->sticker_tex = 0;
+
 	// Enable Depth Testing
 	glEnable(GL_DEPTH_TEST);
 }
@@ -222,6 +224,63 @@ GLuint Model::loadTexture(const char* path, GLuint texture_ind) {
 	return texture;
 }
 
+void Model::loadSticker() {
+	int img_width, img_height, color_channels; // Width, Height, and color channels of the Texture.
+
+	// Fix the flipped texture (by default it is flipped).
+	stbi_set_flip_vertically_on_load(true);
+	// Load the texture and fill out the variables.
+	unsigned char* text_bytes = stbi_load("3D/sticker.png", // Texture path
+		&img_width, // Width of the texture
+		&img_height, // height of the texture
+		&color_channels, // color channel
+		0);
+
+	// Generate a reference.
+	glGenTextures(1, &sticker_tex);
+	// Set the current texture we're working on to Texture 0.
+	glActiveTexture(GL_TEXTURE2);
+	// Bind our next tasks to Tex0 to our current reference similar to VBOs.
+	glBindTexture(GL_TEXTURE_2D, sticker_tex);
+	//If you want to set how the texture maps on a different size model
+	glTexParameteri(GL_TEXTURE_2D,
+		GL_TEXTURE_WRAP_S, // XY = ST (s for x, t for y)
+		GL_CLAMP_TO_EDGE //GL_CLAMP_TO_EDGE for stretch, 
+	);
+	glTexParameteri(GL_TEXTURE_2D,
+		GL_TEXTURE_WRAP_T, // XY = ST (s for x, t for y)
+		GL_REPEAT //GL_CLAMP_TO_EDGE for stretch, 
+	);
+
+	// Checks how many color channels there are to either set the rgb mode to with or with the alpha.
+	unsigned int rgb = GL_RGB;
+	if (color_channels == 3) {
+		rgb = GL_RGB;
+	}
+	else if (color_channels == 4) {
+		rgb = GL_RGBA;
+	}
+
+	//Assign the loaded texture to the OpenGL reference.
+	glTexImage2D(
+		GL_TEXTURE_2D,
+		0, // Texture 0
+		rgb, // Target color format of the texture.
+		img_width, // Texture width
+		img_height, // Texture height
+		0,
+		rgb, // Color format of the texture
+		GL_UNSIGNED_BYTE,
+		text_bytes // loaded texture in bytes
+	);
+
+	// Generate the mipmaps to the current texture
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	// Free up the loaded bytes.
+	stbi_image_free(text_bytes);
+}
+
 glm::vec3 Model::getPosition() {
 	return this->pos;
 }
@@ -287,6 +346,20 @@ void Model::draw(GLuint* shaderProgram, bool texExists) {
 	glBindTexture(GL_TEXTURE_2D, norm_tex);
 	glUniform1i(tex1Address, 1);
 
+	if (this->sticker_tex != 0) {
+		GLuint sticker_existsAddress = glGetUniformLocation(*shaderProgram, "sticker_exists");
+		glUniform1f(sticker_existsAddress, true);
+
+		glActiveTexture(GL_TEXTURE2);
+		GLuint stickerAddress = glGetUniformLocation(*shaderProgram, "sticker");
+		glBindTexture(GL_TEXTURE_2D, this->sticker_tex);
+		glUniform1i(stickerAddress, 2);
+	}
+	else {
+		GLuint sticker_existsAddress = glGetUniformLocation(*shaderProgram, "sticker_exists");
+		glUniform1f(sticker_existsAddress, false);
+	}
+
 	/* Draw */
 	glBindVertexArray(VAO);
 	if (attribSize == 14) std::cout << attribSize << std::endl;
@@ -299,4 +372,6 @@ void Model::draw(GLuint* shaderProgram, bool texExists) {
 
 void Model::move(glm::vec3 offset) {
 	this->pos += offset;
+
+	if (this->pos.y <= 0) this->pos.y = 0;
 }

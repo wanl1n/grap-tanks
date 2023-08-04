@@ -47,10 +47,11 @@ namespace players {
 			float medIntensity;
 			float highIntensity;
 
+			// BONUS
+			bool jumping;
+
 		public:	
 			Player(Model* tank);
-
-			void update();
 
 		// Getters
 		public:
@@ -103,6 +104,10 @@ namespace players {
 
 			void setModel(Model* tank);
 
+		// BONUS: Tank Jump
+		public:
+			bool isJumping();
+			void setJumping(bool x);
 	};
 }
 

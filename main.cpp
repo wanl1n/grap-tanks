@@ -1,4 +1,4 @@
-/* Include files */
+// Include files
 #define STB_IMAGE_IMPLEMENTATION
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "MainInclude.hpp"
@@ -35,19 +35,20 @@ float width = 720.f;
 float height = 720.f;
 float speed = 1.5f;
 
+// Player contains the states of the player tank.
 Player player = Player(NULL);
 
-/* Camera global variables */
+// Camera global variables
 float radius = 50.f;
 float pitch = 0.f; // initial pitch is 0 degrees (positive x axis)
 float yaw = 270.f; // initial yaw is 270 degrees (-90 degrees of positive x axis; negative z axis)
 float yrot = 90.f;
 
-/* Mouse variables */
+// Mouse variables
 double prev_xpos = width / 2;
 double prev_ypos = height / 2;
 
-/* Keyboard Input Function */
+// Keyboard Input Function
 void Key_Callback(GLFWwindow* window, int key, int scancode, int action, int mod) {
 
     // Switching Camera Controls
@@ -124,7 +125,9 @@ void Key_Callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
     // Point Light Intensity Controls
     if (key == GLFW_KEY_F && action == GLFW_PRESS) player.setAdjustingHeadlights(true);
-        
+    
+    // Jumping
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) { player.setJumping(true); glfwSetTime(0); }
 }
 
 int main()
@@ -134,15 +137,15 @@ int main()
     /* Initialize the library */
     if (!glfwInit()) return -1;
 
-    /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow((int)width, (int)height, "gdgrappling at straws", NULL, NULL);
+    // Create a windowed mode window and its OpenGL context
+    window = glfwCreateWindow((int)width, (int)height, "gdgrappling at straws - que, valdecantos, young", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
         return -1;
     }
 
-    /* Make the window's context current */
+    // Make the window's context current
     glfwMakeContextCurrent(window);
     gladLoadGL();
 
@@ -173,6 +176,7 @@ int main()
                         glm::vec3(0.f, -8.f, -200.f),       //pos
                         glm::vec3(5.f),                     //scale
                         glm::vec3(0.f, 0.f, 0.f));          //rotate
+    stone.loadSticker();
     Model ant = Model("3D/Obstacles/Ant/ant1.obj", "3D/Obstacles/Ant/ant_(1).png", "",
                         glm::vec3(-150.f, 0.f, -200.f),     //pos
                         glm::vec3(0.03f),                   //scale
@@ -213,8 +217,7 @@ int main()
     // Creating the skybox
     Skybox skybox = Skybox();
 
-
-    /* Light Sources */
+    // Light Sources
     // Direction Light: From the Moon 
     DirectionLight moonlight = DirectionLight(lightModel.getPosition(), glm::vec3(0.f), lightModel.getColor(), 0.1f);
     // Point Light: Position is at front of tank
@@ -236,9 +239,15 @@ int main()
     MyCamera* mainCamera = &thirdPersonPerspectiveCamera;
 
     // Put the headlights at the first person camera position
-    firstPersonPerspectiveCamera.setCenterOffset(glm::vec3(0, 0, -40.f));
+    firstPersonPerspectiveCamera.setPos(tank.getPosition());
+    firstPersonPerspectiveCamera.rotateWithTank(yrot);
+    firstPersonPerspectiveCamera.setPos(glm::vec3(tank.getPosition().x, tank.getPosition().y + 30.f, tank.getPosition().z - 10.f));
     headlights.setPos(firstPersonPerspectiveCamera.getCameraCenter());
 
+    // Enable Blending
+    glEnable(GL_BLEND);
+    //Choose a Blending Function
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -337,6 +346,10 @@ int main()
                 firstPersonPerspectiveCamera.setPos(glm::vec3(tank.getPosition().x, tank.getPosition().y + 30.f, tank.getPosition().z - 10.f));
             }
 
+            // BONUS -- Direction of the spot light (head lights)
+            GLuint spotDirAddress = glGetUniformLocation(*litShader.getShaderProgram(), "sl_dir");
+            glUniform3fv(spotDirAddress, 1, glm::value_ptr(moveDirection));
+
             // Also update the light from the tank.
             headlights.setPos(firstPersonPerspectiveCamera.getCameraCenter() + glm::vec3(0, 10.f, -20.f));
         }
@@ -364,6 +377,20 @@ int main()
             if (player.isDroningBackward()) orthoCamera.move(glm::vec3(0, 0, speed));
             if (player.isDroningLeft()) orthoCamera.move(glm::vec3(-speed, 0, 0));
             if (player.isDroningRight()) orthoCamera.move(glm::vec3(speed, 0, 0));
+
+            if (player.isDroningForward()) std::cout << "Drone View: Forward." << std::endl;
+            if (player.isDroningBackward()) std::cout << "Drone View: Backward." << std::endl;
+            if (player.isDroningLeft()) std::cout << "Drone View: Left." << std::endl;
+            if (player.isDroningRight()) std::cout << "Drone View: Right." << std::endl;
+        }
+
+        // BONUS - jumping
+        if (player.isJumping()) {
+            std::cout << "Jumping." << std::endl;
+
+            if (glfwGetTime() > 1.f) player.setJumping(false);
+            else if (glfwGetTime() > 0.5f) tank.move(glm::vec3(0, -speed * 9.81f * glfwGetTime(), 0));
+            else if (glfwGetTime() > 0.f) tank.move(glm::vec3(0, speed * 9.81f * glfwGetTime(), 0));
         }
 
         // ---------------------- RENDERING OBJECTS ------------------------- //

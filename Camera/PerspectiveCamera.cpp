@@ -50,6 +50,7 @@ void PerspectiveCamera::calcMouseRotate(float pitch, float yaw, glm::vec3 tankPo
 	this->pos = tankPos + glm::vec3(rotation.x, rotation.y, -rotation.z);
 	this->center = tankPos;
 
+
 	this->worldUp = glm::normalize(glm::vec3(0.f, 1.f, 0.f));
 
 	this->viewMatrix = glm::lookAt(this->pos, this->pos + this->center, this->worldUp);
@@ -57,43 +58,43 @@ void PerspectiveCamera::calcMouseRotate(float pitch, float yaw, glm::vec3 tankPo
 
 void PerspectiveCamera::calcKeyRotate(glm::vec3 offset) {
 
-	/*this->center.x += offset.x;
+	this->center.x += offset.x;
 	this->center.y += offset.y;
-	this->center.z += offset.z;*/
-	this->panRotate += offset * 2.f;
+	this->center.z += offset.z;
+	//this->panRotate += offset * 2.f;
 
-	// Rotation limit para di mabreak ang neck
-	if (this->panRotate.y > 35.f) {
-		this->panRotate.y = 35.f;
-	}
-	if (this->panRotate.y < -35.f) {
-		this->panRotate.y = -35.f;
-	}
-	
-	float theta_tot = 90.f; float radius = 40.f;
+	//// Rotation limit para di mabreak ang neck
+	//if (this->panRotate.y > 35.f) {
+	//	this->panRotate.y = 35.f;
+	//}
+	//if (this->panRotate.y < -35.f) {
+	//	this->panRotate.y = -35.f;
+	//}
+	//
+	//float theta_tot = 90.f; float radius = 40.f;
 
-	float yaw = glm::radians((panRotate.x / (radius)) * theta_tot);
-	float pitch = glm::radians((panRotate.y / (radius)) * theta_tot);
+	//float yaw = glm::radians((panRotate.x / (radius)) * theta_tot);
+	//float pitch = glm::radians((panRotate.y / (radius)) * theta_tot);
 
-	// Limiting the degree in case of flipping.
-	float limit = theta_tot - 0.01f;
-	if (yaw > limit) yaw = limit;
-	if (yaw < -limit) yaw = -limit;
-	if (pitch > limit) pitch = limit;
-	if (pitch < -limit) pitch = -limit;
+	//// Limiting the degree in case of flipping.
+	//float limit = theta_tot - 0.01f;
+	//if (yaw > limit) yaw = limit;
+	//if (yaw < -limit) yaw = -limit;
+	//if (pitch > limit) pitch = limit;
+	//if (pitch < -limit) pitch = -limit;
 
-	// Finally get the direction in each axis by using Polar to Cartesian point conversion.
-	float xAxisRot = radius * sin(yaw) * cos(pitch);
-	//float xAxisRot = radius * cos(pitch);
-	float yAxisRot = radius * sin(pitch);
-	float zAxisRot = radius * cos(yaw) * cos(pitch);
+	//// Finally get the direction in each axis by using Polar to Cartesian point conversion.
+	//float xAxisRot = radius * sin(yaw) * cos(pitch);
+	////float xAxisRot = radius * cos(pitch);
+	//float yAxisRot = radius * sin(pitch);
+	//float zAxisRot = radius * cos(yaw) * cos(pitch);
 
-	// Update the camera center with the new calculated point.
-	// Finally, make sure to add the strafing movement of the camera to the x-axis.
-	this->center = glm::vec3(xAxisRot, yAxisRot, -zAxisRot);
+	//// Update the camera center with the new calculated point.
+	//// Finally, make sure to add the strafing movement of the camera to the x-axis.
+	//this->center = glm::vec3(xAxisRot, yAxisRot, -zAxisRot);
 
-	// Next, calculate the position change based on where the camera center is.
-	glm::vec3 worldUp = glm::normalize(glm::vec3(0, 1.f, 0));
+	//// Next, calculate the position change based on where the camera center is.
+	//glm::vec3 worldUp = glm::normalize(glm::vec3(0, 1.f, 0));
 
 	this->viewMatrix = glm::lookAt(this->pos, this->pos - this->center, this->worldUp);
 }
@@ -102,13 +103,11 @@ void PerspectiveCamera::rotateWithTank(float yrot) {
 	this->center = this->pos - glm::vec3(cos(glm::radians(yrot)), this->center.y, sin(glm::radians(yrot))) * 50.0f;
 	this->center.x -= 10.f;
 
-	this->panRotate = center;
 }
 
 void PerspectiveCamera::setCenter(glm::vec3 offset) {
 	this->center = offset * 2.0f;
 
-	this->panRotate = center;
 }
 
 void PerspectiveCamera::zoom(float delta) {

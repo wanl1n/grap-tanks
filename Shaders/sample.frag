@@ -6,9 +6,11 @@ out vec4 FragColor;
 // Texture to be passed
 uniform sampler2D tex0;
 uniform sampler2D norm_tex;
+uniform sampler2D sticker;
 
 // Texture exists
 uniform bool tex_exists;
+uniform bool sticker_exists;
 
 /* Direction Light Properties */
 uniform bool dl_exists;
@@ -34,6 +36,8 @@ uniform vec3 pl_ambientColor;
 uniform float pl_specStr;
 uniform float pl_specPhong;
 
+uniform vec3 sl_dir;
+
 // Camera position
 uniform vec3 cameraPos;
 
@@ -49,6 +53,7 @@ in vec3 normCoord;
 // Receive the position of the vertex to the vertex shader 
 in vec3 fragPos;
 
+in mat3 TBN;
 
 // Calculate the lighting of the directional light on the color of the object/model.
 vec4 calcDirLight(vec3 normal, vec3 viewDir) {
@@ -99,10 +104,32 @@ vec4 calcPointLight(vec3 normal, vec3 viewDir) {
 	return vec4(intensity * (pl_specColor + pl_diffuse + pl_ambient), 1.f);
 }
 
-in mat3 TBN;
+// BONUS: Spot light
+vec4 calcSpotLight(vec3 normal, vec3 viewDir) {
+    
+    // Set the intensity of the spot light
+    float intensity = 0.5f;
+
+    // Calculate the direction of the spot light.
+    vec3 LightToPixel = normalize(pl_pos - fragPos);
+    float SpotFactor = dot(LightToPixel, sl_dir);
+
+    // If the pixel is within the cone
+    if (SpotFactor > cos(0.5f)) {
+        // Calculate the lighting using the point light
+        vec4 Color = calcPointLight(normal, viewDir);
+        // Return the calculated lighting
+        return intensity * Color * (1.0 - (1.0 - SpotFactor) * 1.0/(1.0 - cos(0.5f)));
+    }
+    else {
+        // Outside the range of the spot light: return 0 = no light.
+        return vec4(0,0,0,0);
+    }
+}
 
 void main() {
-
+    
+    // If transparent, discard pixel.
     vec4 pixelColor = texture(tex0, texCoord);
     if (pixelColor.a < 0.01) {
         discard;
@@ -124,20 +151,25 @@ void main() {
     FragColor = vec4(0.f);
    
    // If color exists
-   if (any(lessThan(color.xyz, vec3(1.f)))) {
-    if (any(greaterThan(color.xyz, vec3(0.f))))
-       FragColor = color;
-   }
+    if (any(lessThan(color.xyz, vec3(1.f)))) {
+        if (any(greaterThan(color.xyz, vec3(0.f)))) FragColor = color;
+    }
 
     // Lit Objects (with texture)
     if (tex_exists) {
+
         // If direction light exists
-        if (dl_exists) 
-            FragColor += calcDirLight(normal, viewDir) * texture(tex0, texCoord); 
+        if (dl_exists)  FragColor += calcDirLight(normal, viewDir) * texture(tex0, texCoord); 
     
         // If point light exists
-        if (pl_exists) 
-            FragColor += calcPointLight(normal, viewDir) * texture(tex0, texCoord); 
-       
+        if (pl_exists)  FragColor += calcSpotLight(normal, viewDir) * texture(tex0, texCoord); 
+            // BONUS: Spot Light
+        // To switch to point light:
+        // if (pl_exists)  FragColor += calcPointLight(normal, viewDir) * texture(tex0, texCoord); 
+
+        if (sticker_exists) { 
+            if (dl_exists)  FragColor += calcDirLight(normal, viewDir) * texture(sticker, texCoord); 
+            if (pl_exists)  FragColor += calcSpotLight(normal, viewDir) * texture(sticker, texCoord); 
+        }
     }
 }
