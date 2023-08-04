@@ -2,6 +2,7 @@
 
 using namespace models;
 
+// Create a skybox upon initialization.
 Skybox::Skybox() : shader("Shaders/skybox.vert", "Shaders/skybox.frag"){
     //Vertices for the cube
     float skyboxVertices[]{
@@ -102,7 +103,10 @@ Skybox::Skybox() : shader("Shaders/skybox.vert", "Shaders/skybox.frag"){
     stbi_set_flip_vertically_on_load(true);
 }
 
+// Draw the created shader.
 void Skybox::draw(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, bool night) {
+    
+    // First set the right shader
     glUseProgram(*this->shader.getShaderProgram());
 
     glDepthMask(GL_FALSE);
@@ -112,15 +116,18 @@ void Skybox::draw(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, bool night) 
     // Strip off the translation of the camera since we only need the rotation.
     skyView = glm::mat4(glm::mat3(viewMatrix));
 
+    // Pass the skybox properties to the skybox shader.
     unsigned int skyProjectionLoc = glGetUniformLocation(*this->shader.getShaderProgram(), "projection");
     glUniformMatrix4fv(skyProjectionLoc, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 
     unsigned int skyViewLoc = glGetUniformLocation(*this->shader.getShaderProgram(), "view");
     glUniformMatrix4fv(skyViewLoc, 1, GL_FALSE, glm::value_ptr(skyView));
 
+    // Tell shader if its night vision mode or not.
     unsigned int nightVisionLoc = glGetUniformLocation(*this->shader.getShaderProgram(), "nightVision");
     glUniform1i(nightVisionLoc, night);
 
+    // Draw
     glBindVertexArray(this->VAO);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, this->skyboxTex);

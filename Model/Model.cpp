@@ -2,15 +2,19 @@
 
 using namespace models;
 
+// Initialize all the attributes of model
 Model::Model(std::string strObjPath, const char* pathTex, const char* pathNorm,
 	glm::vec3 pos, glm::vec3 scale, glm::vec3 rotate, glm::vec4 color)
 	: pos(pos), scale(scale), rotate(rotate), color(color)
 {
+	// Loading the .obj file.
 	this->loadModelData(strObjPath);
 
+	// If these textures exist, load them too.
 	if (pathTex != "") this->texture = loadTexture(pathTex, GL_TEXTURE0);
 	if (pathNorm != "") this->norm_tex = loadTexture(pathNorm, GL_TEXTURE1);
 
+	// Set the initial value of the sticker texture to 0. -- BONUS
 	this->sticker_tex = 0;
 
 	// Enable Depth Testing
@@ -224,6 +228,8 @@ GLuint Model::loadTexture(const char* path, GLuint texture_ind) {
 	return texture;
 }
 
+// Loads the sticker texture (the file is constant for single use but this can be easily 
+// made reusable by adding it as a parameter similar to the normals)
 void Model::loadSticker() {
 	int img_width, img_height, color_channels; // Width, Height, and color channels of the Texture.
 
@@ -281,6 +287,7 @@ void Model::loadSticker() {
 	stbi_image_free(text_bytes);
 }
 
+// Very straightforward getters and setters
 glm::vec3 Model::getPosition() {
 	return this->pos;
 }
@@ -309,53 +316,58 @@ void Model::rotateBy(glm::vec3 offset) {
 	this->rotate += offset;
 }
 
+// The draw function sets the uniforms and draws the object.
 void Model::draw(GLuint* shaderProgram, bool texExists) {
 
+	// First check if texture exists.
 	GLuint tex_existsAddress = glGetUniformLocation(*shaderProgram, "tex_exists");
 	glUniform1f(tex_existsAddress, texExists);
 
+	// Pass the color.
 	GLuint colorAddress = glGetUniformLocation(*shaderProgram, "color");
 	glUniform4fv(colorAddress, 1, glm::value_ptr(this->color));
 
-	/* TRANSFORMATION MATRIX */
+	// TRANSFORMATION MATRIX 
 	glm::mat4 identity_matrix4 = glm::mat4(1.f);
 	// Translate
 	glm::mat4 transform = glm::translate(identity_matrix4, this->pos);
 	// Scale
 	transform = glm::scale(transform, glm::vec3(this->scale));
 	// Rotate
-	transform = glm::rotate(transform, glm::radians(this->rotate.x), glm::vec3(1.f, 0.f, 0.f));
-	transform = glm::rotate(transform, glm::radians(this->rotate.y), glm::vec3(0.f, 1.f, 0.f));
-	transform = glm::rotate(transform, glm::radians(this->rotate.z), glm::vec3(0.f, 0.f, 1.f));
+	transform = glm::rotate(transform, glm::radians(this->rotate.x), glm::vec3(1.f, 0.f, 0.f)); // X-axis
+	transform = glm::rotate(transform, glm::radians(this->rotate.y), glm::vec3(0.f, 1.f, 0.f)); // Y-axis
+	transform = glm::rotate(transform, glm::radians(this->rotate.z), glm::vec3(0.f, 0.f, 1.f)); // Z-axis
 
+	// Pass the transform
 	unsigned int transformLoc = glGetUniformLocation(*shaderProgram, "transform");
-	glUniformMatrix4fv(transformLoc,
-		1,
-		GL_FALSE,
-		glm::value_ptr(transform)
-	);
+	glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
 
-	// Get the location of the tex 0 in the fragment shader
+	// Set the active texture to 0 and pass it to the shader
 	glActiveTexture(GL_TEXTURE0);
 	GLuint tex0Address = glGetUniformLocation(*shaderProgram, "tex0");
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glUniform1i(tex0Address, 0);
 
+	// Set the active texture to 1 and pass it to the shader
 	glActiveTexture(GL_TEXTURE1);
 	GLuint tex1Address = glGetUniformLocation(*shaderProgram, "norm_tex");
 	glBindTexture(GL_TEXTURE_2D, norm_tex);
 	glUniform1i(tex1Address, 1);
 
+	// First check if the sticker texture exists (if it was loaded)
 	if (this->sticker_tex != 0) {
+		// Tell shader it exists
 		GLuint sticker_existsAddress = glGetUniformLocation(*shaderProgram, "sticker_exists");
 		glUniform1f(sticker_existsAddress, true);
 
+		// Pass the sticker texture
 		glActiveTexture(GL_TEXTURE2);
 		GLuint stickerAddress = glGetUniformLocation(*shaderProgram, "sticker");
 		glBindTexture(GL_TEXTURE_2D, this->sticker_tex);
 		glUniform1i(stickerAddress, 2);
 	}
 	else {
+		// Tell the shader it does not exist
 		GLuint sticker_existsAddress = glGetUniformLocation(*shaderProgram, "sticker_exists");
 		glUniform1f(sticker_existsAddress, false);
 	}
@@ -370,6 +382,7 @@ void Model::draw(GLuint* shaderProgram, bool texExists) {
 	glUniform1f(tex_existsAddress, true);
 }
 
+// Move the model but make sure it doesn't go past the ground
 void Model::move(glm::vec3 offset) {
 	this->pos += offset;
 

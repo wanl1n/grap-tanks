@@ -108,7 +108,7 @@ vec4 calcPointLight(vec3 normal, vec3 viewDir) {
 vec4 calcSpotLight(vec3 normal, vec3 viewDir) {
     
     // Set the intensity of the spot light
-    float intensity = 0.5f;
+    float intensity = 0.8f;
 
     // Calculate the direction of the spot light.
     vec3 LightToPixel = normalize(pl_pos - fragPos);

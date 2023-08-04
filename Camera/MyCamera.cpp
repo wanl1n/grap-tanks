@@ -2,12 +2,14 @@
 
 using namespace cameras;
 
+// Initialize all the attributes.
 MyCamera::MyCamera(glm::vec3 pos, glm::vec3 worldUp, glm::vec3 center) 
 	:  pos(pos), worldUp(worldUp), center(center) {
 	this->viewMatrix = glm::mat4(1.f);
 	this->projMatrix = glm::mat4(1.f);
 }
 
+// Passes the attributes to the shader program.
 void MyCamera::updateShaderViewProj(GLuint* shaderProgram) {
 	this->viewMatrix = glm::lookAt(this->pos, this->center, this->worldUp);
 

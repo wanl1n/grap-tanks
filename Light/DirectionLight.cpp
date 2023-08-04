@@ -10,6 +10,7 @@ DirectionLight::DirectionLight(glm::vec3 pos, glm::vec3 pointsAt, glm::vec3 colo
 	// Compute Direction 
     this->direction = this->pos;
 
+    // Set the ambient strength to 0.05f so it's not too strong.
     this->ambientStr = 0.05f;
 }
 
@@ -48,10 +49,12 @@ void DirectionLight::applyUniqueValuesToShader(GLuint* shaderProgram) {
     glUniform1f(specPhongAddress, specPhong);
 }
 
+// Turn off the light (for resetting)
 void DirectionLight::turnOff() {
     glUniform1f(stateAddress, false);
 }
 
+// Getter for direction
 glm::vec3 DirectionLight::getDirection() {
 	return this->direction;
 }

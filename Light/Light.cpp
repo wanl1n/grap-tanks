@@ -2,6 +2,7 @@
 
 using namespace lights;
 
+// Initialize attributes
 Light::Light(glm::vec3 pos, glm::vec3 color, float multiplier, float ambientStr,
 	glm::vec3 ambientColor, float specStr, float specPhong)
 	: pos(pos), color(color), ambientColor(ambientColor) {
@@ -15,8 +16,11 @@ Light::Light(glm::vec3 pos, glm::vec3 color, float multiplier, float ambientStr,
 // Passes the common properties to the shader program.
 void Light::applyToShader(GLuint* shaderProgram, glm::vec3 cameraPos) {
 
+	// Child classes will have a definition for this function 
+	// as they have their own unique values to pass.
 	this->applyUniqueValuesToShader(shaderProgram);
 
+	// Also pass the camera position
 	GLuint cameraPosAddress = glGetUniformLocation(*shaderProgram, "cameraPos");
 	glUniform3fv(cameraPosAddress, 1, glm::value_ptr(cameraPos));
 }
@@ -34,6 +38,7 @@ void Light::changeIntensity(float delta) {
     if (this->multiplier <= 0) this->multiplier = 0.01f;
 }
 
+// Limit the multiplier so it doesn't go to the negatives.
 void Light::setMultiplier(float multiplier) {
 	this->multiplier = multiplier;
 

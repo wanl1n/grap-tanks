@@ -2,6 +2,7 @@
 
 using namespace cameras;
 
+// Initialize all attributes.
 PerspectiveCamera::PerspectiveCamera(float FOV, float window_height, float window_width, float near, float far,
 	glm::vec3 pos, glm::vec3 worldUp, glm::vec3 center)
 	: MyCamera(pos, worldUp, center)
@@ -47,7 +48,9 @@ void PerspectiveCamera::calcMouseRotate(float pitch, float yaw, glm::vec3 tankPo
 	rotation.x = radius.x * cos(glm::radians(yaw)) * cos(glm::radians(pitch));
 	rotation.z = (radius.z + 50) * sin(glm::radians(yaw)) * cos(glm::radians(pitch));
 
+	// Set its position relative to the tank position.
 	this->pos = tankPos + glm::vec3(rotation.x, rotation.y, -rotation.z);
+	// Make sure its always looking at the tank.
 	this->center = tankPos;
 
 	this->worldUp = glm::normalize(glm::vec3(0.f, 1.f, 0.f));
@@ -57,9 +60,7 @@ void PerspectiveCamera::calcMouseRotate(float pitch, float yaw, glm::vec3 tankPo
 
 void PerspectiveCamera::calcKeyRotate(glm::vec3 offset) {
 
-	/*this->center.x += offset.x;
-	this->center.y += offset.y;
-	this->center.z += offset.z;*/
+	// First add the offset to the total rotation (*2 for speed).
 	this->panRotate += offset * 2.f;
 
 	// Rotation limit para di mabreak ang neck
@@ -70,8 +71,10 @@ void PerspectiveCamera::calcKeyRotate(glm::vec3 offset) {
 		this->panRotate.y = -35.f;
 	}
 	
+	// Degree of rotation for every % of the theta
 	float theta_tot = 90.f; float radius = 40.f;
 
+	// Yaw and pitch rotation of the center.
 	float yaw = glm::radians((panRotate.x / (radius)) * theta_tot);
 	float pitch = glm::radians((panRotate.y / (radius)) * theta_tot);
 
@@ -84,28 +87,29 @@ void PerspectiveCamera::calcKeyRotate(glm::vec3 offset) {
 
 	// Finally get the direction in each axis by using Polar to Cartesian point conversion.
 	float xAxisRot = radius * sin(yaw) * cos(pitch);
-	//float xAxisRot = radius * cos(pitch);
 	float yAxisRot = radius * sin(pitch);
 	float zAxisRot = radius * cos(yaw) * cos(pitch);
 
-	// Update the camera center with the new calculated point.
-	// Finally, make sure to add the strafing movement of the camera to the x-axis.
+	// Update the camera center with the new calculated point and the position of the camera as offset
 	this->center = this->pos + glm::vec3(xAxisRot, yAxisRot, -zAxisRot);
 
 	this->viewMatrix = glm::lookAt(this->pos, this->center, this->worldUp);
 }
 
+// Rotates on the x-axis (for turning)
 void PerspectiveCamera::rotateWithTank(float yrot) {
 	this->center = this->pos - glm::vec3(cos(glm::radians(yrot)), this->center.y, sin(glm::radians(yrot))) * 50.0f;
 	this->center.x -= 10.f;
 
 }
 
+// For setting the center of the camera.
 void PerspectiveCamera::setCenter(glm::vec3 offset) {
 	this->center = offset * 2.0f;
 
 }
 
+// Increase or decrease the FOV to zoom in and out.
 void PerspectiveCamera::zoom(float delta) {
 	this->FOV += delta;
 

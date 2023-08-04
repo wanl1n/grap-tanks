@@ -3,6 +3,7 @@
 using namespace players;
 
 Player::Player(Model* tank) {
+    // Reference to the player tank from main.
     this->tank = tank;
 
     // ----- Player Controls ----- //
@@ -32,15 +33,18 @@ Player::Player(Model* tank) {
     droningLeft = false;       // A
     // --------------------------- //
 
+    // Headlights Data
     adjustheadlightsIntensity = false;
     headlightsIntensity = 1;
     lowIntensity = 100.f;
     medIntensity = 500.f;
     highIntensity = 1000.f;
 
+    // Event flag for jumping.
     this->jumping = false;
 }
 
+// Very straightforward getters and setters for all the event flags in the Player object.
 bool Player::isDrivingTank() {
     return drivingTank;
 }
@@ -208,14 +212,15 @@ void Player::setDroningLeft(bool x) {
 void Player::setAdjustingHeadlights(bool x) {
     this->adjustheadlightsIntensity = x;
 
+    // If adjusting headlights, increment.
     if (x) {
         headlightsIntensity++;
-        if (headlightsIntensity >= 4)
-            headlightsIntensity = 1;
+
+        // if the intensity is past the 3rd level, reset it back to the lowest level.
+        if (headlightsIntensity >= 4) headlightsIntensity = 1;
 
         std::cout << "[F Key Pressed]: Adjusting Point Light Intensity to " << headlightsIntensity << std::endl;
     }
-
 }
 
 void Player::setModel(Model* tank) {

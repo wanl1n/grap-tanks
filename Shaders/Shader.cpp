@@ -2,10 +2,14 @@
 
 using namespace shaders;
 
+// Upon initialization, the Shader object creates a shader program.
 Shader::Shader(const char* pathVert, const char* pathFrag) {
     this->CreateProgram(pathVert, pathFrag);
 }
 
+// Using the parameters passed from the constructor, the vertex and fragment shaders
+// are created and attached to a shaderprogram which is saved in the Shader object
+// as an attribute.
 void Shader::CreateProgram(const char* pathVert, const char* pathFrag) {
 
     // Vertex shader for positioning
@@ -45,6 +49,7 @@ void Shader::CreateProgram(const char* pathVert, const char* pathFrag) {
     glDeleteShader(fragShader);
 }
 
+// To get the reference to the shader program in this shader object.
 GLuint* Shader::getShaderProgram() {
     return &this->shaderProgram;
 }
