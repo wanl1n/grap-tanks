@@ -316,7 +316,7 @@ int main()
             }
             if (player.isMovingBackward()) { 
                 tank.move(moveDirection); 
-                firstPersonPerspectiveCamera.setCenterOffset(-moveDirection); 
+                firstPersonPerspectiveCamera.setCenterOffset(moveDirection); 
             }
 
             // Turning around
@@ -325,7 +325,7 @@ int main()
                 yrot += speed; // Stores the total rotation of the tank.
                 // Make sure the binoculars rotate with the tank.
                 firstPersonPerspectiveCamera.setPos(tank.getPosition());
-                firstPersonPerspectiveCamera.calcKeyRotate(glm::vec3(speed, 0, 0));
+                firstPersonPerspectiveCamera.rotateWithTank(yrot);
                 firstPersonPerspectiveCamera.setPos(glm::vec3(tank.getPosition().x, tank.getPosition().y + 30.f, tank.getPosition().z - 10.f));
             }
             if (player.isTurningLeft()) { 
@@ -333,7 +333,7 @@ int main()
                 yrot -= speed; // Stores the total rotation of the tank.
                 // Make sure the binoculars rotate with the tank.
                 firstPersonPerspectiveCamera.setPos(tank.getPosition());
-                firstPersonPerspectiveCamera.calcKeyRotate(glm::vec3(-speed, 0, 0));
+                firstPersonPerspectiveCamera.rotateWithTank(yrot);
                 firstPersonPerspectiveCamera.setPos(glm::vec3(tank.getPosition().x, tank.getPosition().y + 30.f, tank.getPosition().z - 10.f));
             }
 
