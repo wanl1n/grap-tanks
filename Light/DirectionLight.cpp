@@ -8,7 +8,9 @@ DirectionLight::DirectionLight(glm::vec3 pos, glm::vec3 pointsAt, glm::vec3 colo
 		ambientColor, specStr, specPhong)
 {
 	// Compute Direction 
-    this->direction = this->pos - this->pointsAt;
+    this->direction = this->pos;
+
+    this->ambientStr = 0.05f;
 }
 
 // Pass the light properties to the shader. 

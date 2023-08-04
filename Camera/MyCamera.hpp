@@ -25,6 +25,7 @@ namespace cameras {
 		// Behaviors
 		public:
 			void updateShaderViewProj(GLuint* shaderProgram);
+			virtual void move(glm::vec3 offset);
 
 		// Getters/Setters
 		public:
@@ -36,7 +37,7 @@ namespace cameras {
 			glm::vec3 getCameraCenter();
 
 			void setPos(glm::vec3 pos);
-			void setCenterOffset(float offset);
+			void setCenterOffset(glm::vec3 offset);
 	};
 }
 

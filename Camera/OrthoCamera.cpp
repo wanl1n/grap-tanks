@@ -14,3 +14,8 @@ OrthoCamera::OrthoCamera(float left, float right, float bottom, float top, float
 		ZNear,
 		ZFar);
 }
+
+void OrthoCamera::move(glm::vec3 offset) {
+	this->pos += offset;
+	this->center += offset;
+}

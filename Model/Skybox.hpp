@@ -25,7 +25,7 @@ namespace models {
 
 		public:
 			Skybox();
-			void draw(glm::mat4 viewMatrix, glm::mat4 projectionMatrix);
+			void draw(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, bool night);
 	};
 }
 

@@ -49,7 +49,14 @@ void MyCamera::setPos(glm::vec3 pos) {
 	this->viewMatrix = glm::lookAt(this->pos, this->center, this->worldUp);
 }
 
-void MyCamera::setCenterOffset(float offset) {
-	this->center.z = offset;
+void MyCamera::setCenterOffset(glm::vec3 offset) {
+	this->center.x += offset.x;
+	this->center.y += offset.y;
+	this->center.z += offset.z;
+
 	this->viewMatrix = glm::lookAt(this->pos, this->center, this->worldUp);
+}
+
+void MyCamera::move(glm::vec3 offset) {
+	this->pos += offset;
 }

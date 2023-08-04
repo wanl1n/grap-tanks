@@ -2,176 +2,224 @@
 
 using namespace models;
 
-Model::Model(std::string strObjPath, std::string strTexturePath,
+Model::Model(std::string strObjPath, const char* pathTex, const char* pathNorm,
 	glm::vec3 pos, glm::vec3 scale, glm::vec3 rotate, glm::vec4 color)
 	: pos(pos), scale(scale), rotate(rotate), color(color)
 {
-	/* Initialize variables for tiny obj loader */
-	// Relative path to the mesh
-	std::string path = strObjPath;
-	// Will contain the mesh's shapes
-	std::vector<tinyobj::shape_t> shapes;
-	// Will contain the mesh's materials
-	std::vector<tinyobj::material_t> materials;
-	// Some error messages might popup
+	this->loadModelData(strObjPath);
+
+	if (pathTex != "") this->texture = loadTexture(pathTex, GL_TEXTURE0);
+	if (pathNorm != "") this->norm_tex = loadTexture(pathNorm, GL_TEXTURE1);
+	
+	// Enable Depth Testing
+	glEnable(GL_DEPTH_TEST);
+}
+
+
+// Loads the model data through the accepted path.
+void Model::loadModelData(std::string path) {
+
+	// use tinyobj to load the file.
+	std::vector<tinyobj::shape_t> shape;
+	std::vector<tinyobj::material_t> material;
 	std::string warning, error;
-	// Basic attributes related to the mesh
 	tinyobj::attrib_t attributes;
 
-	/* load the mesh */
 	bool success = tinyobj::LoadObj(
 		&attributes,
-		&shapes,
-		&materials,
+		&shape,
+		&material,
 		&warning,
 		&error,
 		path.c_str()
 	);
 
-	/* Initialize the Array of Vertex Data */
-	// Loop thorugh all thee vertex indices
-	for (int i = 0; i < shapes[0].mesh.indices.size(); i++) {
-		// Assign the index data for easier access
-		tinyobj::index_t vData = shapes[0].mesh.indices[i];
+	//Vector to hold our tangents
+	std::vector<glm::vec3> tangents;
+	//Vector to hold our bitangents
+	std::vector<glm::vec3> bitangents;
 
-		// X
-		this->fullVertexData.push_back(attributes.vertices[(vData.vertex_index * 3)]);
-		// Y
-		this->fullVertexData.push_back(attributes.vertices[(vData.vertex_index * 3) + 1]);
-		// Z
-		this->fullVertexData.push_back(attributes.vertices[(vData.vertex_index * 3) + 2]);
+	for (int i = 0; i < shape[0].mesh.indices.size(); i += 3) {
 
-		// Normals
-		this->fullVertexData.push_back(attributes.normals[(vData.normal_index * 3)]);
-		this->fullVertexData.push_back(attributes.normals[(vData.normal_index * 3) + 1]);
-		this->fullVertexData.push_back(attributes.normals[(vData.normal_index * 3) + 2]);
+		// Get the 3 vertex data for the triangle
+		tinyobj::index_t vData1 = shape[0].mesh.indices[i];
+		tinyobj::index_t vData2 = shape[0].mesh.indices[i + 1];
+		tinyobj::index_t vData3 = shape[0].mesh.indices[i + 2];
 
-		// U
-		this->fullVertexData.push_back(attributes.texcoords[(vData.texcoord_index * 2)]);
-		// V
-		this->fullVertexData.push_back(attributes.texcoords[(vData.texcoord_index * 2) + 1]);
+		// Position of vertex 1
+		glm::vec3 v1 = glm::vec3(attributes.vertices[vData1.vertex_index * 3],
+			attributes.vertices[vData1.vertex_index * 3 + 1],
+			attributes.vertices[vData1.vertex_index * 3 + 2]);
+		// Position of vertex 2
+		glm::vec3 v2 = glm::vec3(attributes.vertices[vData2.vertex_index * 3],
+			attributes.vertices[vData2.vertex_index * 3 + 1],
+			attributes.vertices[vData2.vertex_index * 3 + 2]);
+		//position of vertex 3
+		glm::vec3 v3 = glm::vec3(attributes.vertices[vData3.vertex_index * 3],
+			attributes.vertices[vData3.vertex_index * 3 + 1],
+			attributes.vertices[vData3.vertex_index * 3 + 2]);
+
+		// Position of uv 1
+		glm::vec2 uv1 = glm::vec2(attributes.texcoords[vData1.texcoord_index * 2],
+			attributes.texcoords[vData1.texcoord_index * 2+ 1] );
+		// Position of uv 2
+		glm::vec2 uv2 = glm::vec2(attributes.texcoords[vData2.texcoord_index * 2],
+			attributes.texcoords[vData2.texcoord_index * 2 + 1]);
+		//position of uv 3
+		glm::vec2 uv3 = glm::vec2(attributes.texcoords[vData3.texcoord_index * 2],
+			attributes.texcoords[vData3.texcoord_index * 2 + 1]);
+
+		glm::vec3 deltaPos1 = v2 - v1;
+		glm::vec3 deltaPos2 = v3 - v1;
+
+		glm::vec2 deltaUV1 = uv2 - uv1;
+		glm::vec2 deltaUV2 = uv3 - uv1;
+
+		float r = 1.0f / ((deltaUV1.x * deltaUV2.y) - (deltaUV1.y * deltaUV2.x));
+
+		// Tangent (T)
+		glm::vec3 tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
+		// Bitangent (B)
+		glm::vec3 bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
+
+		tangents.push_back(tangent);
+		tangents.push_back(tangent);
+		tangents.push_back(tangent);
+
+		bitangents.push_back(bitangent);
+		bitangents.push_back(bitangent);
+		bitangents.push_back(bitangent);
 	}
 
-	/* Initialize VAO / VBO */
+	// Loading the UV data of the object.
+	for (int i = 0; i < shape[0].mesh.indices.size(); i++) {
+		tinyobj::index_t vData = shape[0].mesh.indices[i];
+
+		// This will generate an array with 3 consecutive points 
+		// as a position coordinate ordered in the vector.
+		fullVertexData.push_back(attributes.vertices[vData.vertex_index * 3]);// X
+		fullVertexData.push_back(attributes.vertices[vData.vertex_index * 3 + 1]);// Y
+		fullVertexData.push_back(attributes.vertices[vData.vertex_index * 3 + 2]);// Z
+
+		// Add normals here
+		fullVertexData.push_back(attributes.normals[vData.normal_index * 3]);// X
+		fullVertexData.push_back(attributes.normals[vData.normal_index * 3 + 1]);// Y
+		fullVertexData.push_back(attributes.normals[vData.normal_index * 3 + 2]);// Z
+
+		// UV
+		fullVertexData.push_back(attributes.texcoords[vData.texcoord_index * 2]);
+		fullVertexData.push_back(attributes.texcoords[vData.texcoord_index * 2 + 1]);
+
+		fullVertexData.push_back(tangents[i].x);
+		fullVertexData.push_back(tangents[i].y);
+		fullVertexData.push_back(tangents[i].z);
+
+		fullVertexData.push_back(bitangents[i].x);
+		fullVertexData.push_back(bitangents[i].y);
+		fullVertexData.push_back(bitangents[i].z);
+		// Result: 3 Pos, 3 Norm, 2 UV, 3 Pos, 3 Norm, 2 UV, and so on.
+	}
+
+	attribSize = 5;
+	if (!attributes.normals.empty()) { attribSize += 3; }
+
+	// Generate the buffers.
+	generateBuffers();
+}
+
+// Generate the buffers for the vertices and rendering.
+void Model::generateBuffers() {
+
 	glGenVertexArrays(1, &this->VAO);
 	glGenBuffers(1, &this->VBO);
 
-	/* Bind the VAO */
-	glBindVertexArray(this->VAO);
-
-	/* Create an Array Buffer to store vertex positions */
+	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
-	/* Add the size of our Vertex Array in bytes and the contents to the buffer */
-	glBufferData(
-		GL_ARRAY_BUFFER,
-		sizeof(GLfloat) * fullVertexData.size(),
-		fullVertexData.data(),
-		GL_STATIC_DRAW
-	);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * fullVertexData.size(), fullVertexData.data(), GL_STATIC_DRAW);
 
-	/* Position Data */
-	glVertexAttribPointer(
-		0, // Index 0 is vertex position
-		3, // X Y Z 
-		GL_FLOAT,
-		GL_FALSE,
-		8 * sizeof(GL_FLOAT),
-		(void*)0
-	);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(GL_FLOAT), (void*)0);
 
-	/* Normal Data */
-	GLintptr normalPtr = 3 * sizeof(float);
-	glVertexAttribPointer(
-		1, // Index 1 for normals
-		3, // Normals has 3 values
-		GL_FLOAT, // Data type of normals
-		GL_FALSE,
-		8 * sizeof(GL_FLOAT),
-		(void*)normalPtr
-	);
+	GLintptr normPtr = 3 * sizeof(float);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(GLfloat), (void*)normPtr);
 
-	/* UV Data */
-	GLintptr uvptr = 6 * sizeof(float);
-	glVertexAttribPointer(
-		2, // Index 2 for tex coordinates / UV
-		2, // UV is 2 floats (U,V)
-		GL_FLOAT, // Data type of array
-		GL_FALSE,
-		8 * sizeof(GL_FLOAT),
-		(void*)uvptr // Add in the offset
-	);
+	GLintptr uvPtr = 6 * sizeof(float);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 14 * sizeof(GLfloat), (void*)uvPtr);
+
+	GLintptr tangentPtr = 8 * sizeof(float);
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(GLfloat), (void*)tangentPtr);
+
+	GLintptr bitangentPtr = 11 * sizeof(float);
+	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(GLfloat), (void*)bitangentPtr);
 
 	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(1); // for Normals
+	glEnableVertexAttribArray(2); // 2 for UV / Texture
+	glEnableVertexAttribArray(3); // 3 for Tangent
+	glEnableVertexAttribArray(4); // 4 for Bitangent
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0); // Wala nang ginagalaw sa VBO.
+	glBindVertexArray(0); // Wala ka nang ginagalaw na VAO.
+}
 
-	if (strTexturePath.length() != 0) {
-		/* Variablles for our texture */
-		int img_width, img_height, colorChannels;
-		// Fix the flipped texture (by default it is flipped)
-		stbi_set_flip_vertically_on_load(true);
-		/* Load Texture */
-		unsigned char* tex_bytes =
-			stbi_load(strTexturePath.c_str(), // texture path
-				&img_width, // fills out the width
-				&img_height, // fills out the height
-				&colorChannels, //fills out the color channel
-				0);
+// Loads the texture of the model given in the path.
+GLuint Model::loadTexture(const char* path, GLuint texture_ind) {
+	int img_width, img_height, color_channels; // Width, Height, and color channels of the Texture.
 
-		/* Setup Texture */
-		// Generate a reference
-		glGenTextures(1, &this->texture);
-		// Set the current texture we're working on to Texture 0
-		glActiveTexture(GL_TEXTURE);
-		// Bind our next tasks to Tex0
-		// To our current reference similar to what we're doing to VBOs
-		glBindTexture(GL_TEXTURE_2D, this->texture);
+	// Fix the flipped texture (by default it is flipped).
+	stbi_set_flip_vertically_on_load(true);
+	// Load the texture and fill out the variables.
+	unsigned char* text_bytes = stbi_load(path, // Texture path
+		&img_width, // Width of the texture
+		&img_height, // height of the texture
+		&color_channels, // color channel
+		0);
 
-		// If texture is png, color format is RGBA
-		if (strTexturePath.find("png") != std::string::npos) {
-			/* Assign Texture to Reference */
-			// Assign the loaded texture to the OpenGL reference
-			glTexImage2D(
-				GL_TEXTURE_2D,
-				0, // Texture 0
-				GL_RGBA, // Target color format of the texture
-				img_width, // Texture width
-				img_height, // Texture height
-				0,
-				GL_RGBA, // Color format of the textyre
-				GL_UNSIGNED_BYTE,
-				tex_bytes // Loaded textures in bytes
-			);
-		}
-		// If texture is jpg, color format is RGB
-		else if (strTexturePath.find("jpg") != std::string::npos) {
-			/* Assign Texture to Reference */
-			// Assign the loaded texture to the OpenGL reference
-			glTexImage2D(
-				GL_TEXTURE_2D,
-				0, // Texture 0
-				GL_RGB, // Target color format of the texture
-				img_width, // Texture width
-				img_height, // Texture height
-				0,
-				GL_RGB, // Color format of the textyre
-				GL_UNSIGNED_BYTE,
-				tex_bytes // Loaded textures in bytes
-			);
-		}
+	GLuint texture;
+	// Generate a reference.
+	glGenTextures(1, &texture);
+	// Set the current texture we're working on to Texture 0.
+	glActiveTexture(texture_ind);
+	// Bind our next tasks to Tex0 to our current reference similar to VBOs.
+	glBindTexture(GL_TEXTURE_2D, texture);
+	//If you want to set how the texture maps on a different size model
+	glTexParameteri(GL_TEXTURE_2D,
+		GL_TEXTURE_WRAP_S, // XY = ST (s for x, t for y)
+		GL_CLAMP_TO_EDGE //GL_CLAMP_TO_EDGE for stretch, 
+	);
+	glTexParameteri(GL_TEXTURE_2D,
+		GL_TEXTURE_WRAP_T, // XY = ST (s for x, t for y)
+		GL_REPEAT //GL_CLAMP_TO_EDGE for stretch, 
+	);
 
-		/* Clean up texture (free memory) */
-		// Generate the mipmaps to the current texture
-		glGenerateMipmap(GL_TEXTURE_2D);
-		// Free up the loaded bytes
-		stbi_image_free(tex_bytes);
-
-		// Enable Depth Testing
-		glEnable(GL_DEPTH_TEST);
+	// Checks how many color channels there are to either set the rgb mode to with or with the alpha.
+	unsigned int rgb = GL_RGB;
+	if (color_channels == 3) {
+		rgb = GL_RGB;
 	}
+	else if (color_channels == 4) {
+		rgb = GL_RGBA;
+	}
+
+	//Assign the loaded texture to the OpenGL reference.
+	glTexImage2D(
+		GL_TEXTURE_2D,
+		0, // Texture 0
+		rgb, // Target color format of the texture.
+		img_width, // Texture width
+		img_height, // Texture height
+		0,
+		rgb, // Color format of the texture
+		GL_UNSIGNED_BYTE,
+		text_bytes // loaded texture in bytes
+	);
+
+	// Generate the mipmaps to the current texture
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	// Free up the loaded bytes.
+	stbi_image_free(text_bytes);
+
+	return texture;
 }
 
 glm::vec3 Model::getPosition() {
@@ -229,16 +277,21 @@ void Model::draw(GLuint* shaderProgram, bool texExists) {
 	);
 
 	// Get the location of the tex 0 in the fragment shader
+	glActiveTexture(GL_TEXTURE0);
 	GLuint tex0Address = glGetUniformLocation(*shaderProgram, "tex0");
-	// Tell OpenGl to use the texture
 	glBindTexture(GL_TEXTURE_2D, texture);
-	// Use the texture at index 0
 	glUniform1i(tex0Address, 0);
+
+	glActiveTexture(GL_TEXTURE1);
+	GLuint tex1Address = glGetUniformLocation(*shaderProgram, "norm_tex");
+	glBindTexture(GL_TEXTURE_2D, norm_tex);
+	glUniform1i(tex1Address, 1);
 
 	/* Draw */
 	glBindVertexArray(VAO);
+	if (attribSize == 14) std::cout << attribSize << std::endl;
 	// Draw using the vertex array
-	glDrawArrays(GL_TRIANGLES, 0, fullVertexData.size() / 8);
+	glDrawArrays(GL_TRIANGLES, 0, fullVertexData.size() / attribSize);
 
 	// Reset to default
 	glUniform1f(tex_existsAddress, true);

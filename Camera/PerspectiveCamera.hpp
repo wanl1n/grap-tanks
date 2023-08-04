@@ -24,8 +24,8 @@ namespace cameras {
 		public:
 			void calcMouseRotate(float pitch, float yaw, glm::vec3 tankPos);
 			void calcKeyRotate(glm::vec3 offset);
+			void setCenter(glm::vec3 offset);
 			void zoom(float delta);
-			void move(glm::vec3 offset);
 	};
 }
 

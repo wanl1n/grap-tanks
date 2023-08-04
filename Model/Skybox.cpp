@@ -102,7 +102,7 @@ Skybox::Skybox() : shader("Shaders/skybox.vert", "Shaders/skybox.frag"){
     stbi_set_flip_vertically_on_load(true);
 }
 
-void Skybox::draw(glm::mat4 viewMatrix, glm::mat4 projectionMatrix) {
+void Skybox::draw(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, bool night) {
     glUseProgram(*this->shader.getShaderProgram());
 
     glDepthMask(GL_FALSE);
@@ -117,6 +117,9 @@ void Skybox::draw(glm::mat4 viewMatrix, glm::mat4 projectionMatrix) {
 
     unsigned int skyViewLoc = glGetUniformLocation(*this->shader.getShaderProgram(), "view");
     glUniformMatrix4fv(skyViewLoc, 1, GL_FALSE, glm::value_ptr(skyView));
+
+    unsigned int nightVisionLoc = glGetUniformLocation(*this->shader.getShaderProgram(), "nightVision");
+    glUniform1i(nightVisionLoc, night);
 
     glBindVertexArray(this->VAO);
     glActiveTexture(GL_TEXTURE0);

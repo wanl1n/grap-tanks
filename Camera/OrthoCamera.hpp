@@ -13,6 +13,8 @@ namespace cameras {
 	public:
 		OrthoCamera(float left, float right, float bottom, float top, float ZNear, float ZFar, 
 			glm::vec3 pos = glm::vec3(0.f), glm::vec3 worldUp = glm::vec3(0.f, 1.f, 0.f), glm::vec3 center = glm::vec3(0.f, 0.f, -5.f));
+	public:
+		void move(glm::vec3 offset);
 	};
 }
 

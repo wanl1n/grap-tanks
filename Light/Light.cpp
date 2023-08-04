@@ -46,6 +46,7 @@ void Light::setPos(glm::vec3 pos) {
 
 void Light::setColor(glm::vec3 color) {
 	this->color = color;
+	this->ambientColor = color;
 }
 
 void Light::setIntensity(float intensity) {

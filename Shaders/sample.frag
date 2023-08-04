@@ -5,6 +5,7 @@ out vec4 FragColor;
 
 // Texture to be passed
 uniform sampler2D tex0;
+uniform sampler2D norm_tex;
 
 // Texture exists
 uniform bool tex_exists;
@@ -98,11 +99,23 @@ vec4 calcPointLight(vec3 normal, vec3 viewDir) {
 	return vec4(intensity * (pl_specColor + pl_diffuse + pl_ambient), 1.f);
 }
 
+in mat3 TBN;
 
 void main() {
+
+    vec4 pixelColor = texture(tex0, texCoord);
+    if (pixelColor.a < 0.01) {
+        discard;
+    }
   
     // Normalize the received normals
-    vec3 normal = normalize(normCoord);
+    //vec3 normal = normalize(normCoord);
+    vec3 normal = texture(norm_tex, texCoord).rgb;
+	//converts RGB to XYZ
+	// 0 == -1
+	// 1 == 1
+	normal = normalize(normal * 2.0 - 1.0);
+	normal = normalize(TBN * normal);
 
     // Get our view direction from the camera to the fragment
     vec3 viewDir = normalize(cameraPos - fragPos);

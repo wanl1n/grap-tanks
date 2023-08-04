@@ -48,6 +48,9 @@
     <ClCompile Include="Model\Skybox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Player\Player.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainInclude.hpp">
@@ -84,6 +87,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Model\Skybox.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Player\Player.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
